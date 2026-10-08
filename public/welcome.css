@@ -1,0 +1,106 @@
+/* 慢记欢迎页 · 生活手账。所有规则限定欢迎页，不改变小屋与账户表单。 */
+body:has(.welcome-page) { background: #e8ebe3; }
+#app:has(.welcome-page) { background: #f8f6ef; box-shadow: 0 0 80px #3549360c; }
+.welcome-page {
+  --welcome-paper: #f8f6ef;
+  --welcome-ink: #303c32;
+  --welcome-green: #53694f;
+  --welcome-muted: #6e7467;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: max(24px, env(safe-area-inset-top)) 30px max(20px, env(safe-area-inset-bottom));
+  color: var(--welcome-ink);
+  background: var(--welcome-paper);
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  isolation: isolate;
+}
+.welcome-page::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: .16; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23949283' opacity='.2' filter='url(%23n)' d='M0 0h160v160H0z'/%3E%3C/svg%3E");
+}
+.welcome-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.welcome-wordmark { display: flex; align-items: center; gap: 9px; }
+.welcome-mark { width: 29px; height: 36px; color: var(--welcome-green); }
+.welcome-wordmark > span { font-family: var(--serif); font-size: 23px; font-weight: 600; line-height: 1.25; letter-spacing: .13em; }
+.welcome-wordmark small { display: block; margin-top: 3px; font-family: Georgia, serif; font-size: 8px; font-weight: 400; letter-spacing: .25em; }
+.welcome-login { display: flex; align-items: center; gap: 4px; min-height: 44px; color: var(--welcome-muted); font-size: 11px; white-space: nowrap; }
+.welcome-login > span { color: var(--welcome-green); font-size: 12px; }
+.welcome-intro { margin-top: clamp(28px, 5svh, 44px); }
+.welcome-eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 15px; color: var(--welcome-green); font-size: 11px; letter-spacing: .18em; }
+.welcome-eyebrow > span { width: 20px; height: 1px; background: #9da68e; }
+.welcome-intro h1 { margin: 0; color: var(--welcome-ink); font-family: "Noto Serif SC", "Songti SC", "STSong", SimSun, serif; font-size: clamp(30px, 8.6vw, 37px); font-weight: 400; line-height: 1.48; letter-spacing: .015em; }
+.welcome-us { position: relative; color: var(--welcome-green); white-space: nowrap; }
+.welcome-us svg { position: absolute; width: 100%; height: 9px; bottom: -5px; left: 0; color: #b7bc9c; }
+.welcome-description { margin: 19px 0 0; color: var(--welcome-muted); font-size: 12px; line-height: 1.9; letter-spacing: .025em; }
+.welcome-illustration { position: relative; width: 100%; margin: 18px 0 24px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.welcome-scene { position: relative; width: 330px; max-width: 100%; height: 292px; margin: 0 auto; }
+.welcome-arch { position: absolute; left: 66px; top: 5px; width: 209px; height: 244px; border: 7px solid #e5e4d5; border-bottom-width: 10px; border-radius: 110px 110px 5px 5px; background: #e4eadb; overflow: hidden; box-shadow: inset 0 0 0 1px #c9d2be, 4px 4px 0 #d9ddcc; }
+.welcome-arch::after { content: ""; position: absolute; inset: 7px; border: 1px solid #f8f6efaa; border-radius: 100px 100px 0 0; }
+.welcome-sun { position: absolute; right: 30px; top: 42px; width: 41px; height: 41px; border-radius: 50%; background: #efe5bf; }
+.welcome-hill { position: absolute; width: 240px; height: 170px; border-radius: 50%; }
+.hill-back { left: -85px; top: 139px; background: #ccd6be; transform: rotate(-16deg); }
+.hill-front { right: -121px; top: 119px; background: #b4c4a6; transform: rotate(28deg); }
+.welcome-window-line { position: absolute; top: 0; left: 50%; bottom: 0; width: 5px; background: #e5e4d5; }
+.welcome-window-line::after { content: ""; position: absolute; top: 113px; left: -110px; width: 220px; height: 5px; background: #e5e4d5; }
+.welcome-floor { position: absolute; left: -15px; right: -15px; bottom: 18px; height: 1px; background: linear-gradient(90deg, transparent, #dcdccb 18%, #dcdccb 82%, transparent); }
+.welcome-rug { position: absolute; left: 35px; bottom: 3px; width: 225px; height: 46px; border-radius: 50%; background: #e9e4d5; border: 5px solid #f0ebe0; transform: rotate(-4deg); }
+.welcome-puppy { display: block; position: absolute; left: 104px; bottom: 15px; width: 123px; height: auto; filter: drop-shadow(2px 6px 4px #6b57351a); transform-origin: center bottom; }
+.welcome-plant { position: absolute; right: 0; bottom: 20px; width: 70px; height: auto; opacity: .94; }
+.welcome-memory { position: absolute; left: 6px; bottom: 45px; width: 79px; height: 92px; padding: 8px 5px 5px; background: #fffdf7; border: 1px solid #e5dfcf; transform: rotate(-10deg); color: #a0ac8c; box-shadow: 0 3px 5px #4e58300a; }
+.welcome-memory::before { content: ""; position: absolute; width: 34px; height: 12px; left: 23px; top: -7px; background: #d7d4ba9c; transform: rotate(5deg); }
+.welcome-memory svg { display: block; width: 100%; height: 54px; background: #eff0e7; }
+.welcome-memory span { display: block; margin-top: 5px; color: #757c68; text-align: center; font-size: 8px; letter-spacing: .05em; }
+.welcome-note { position: absolute; left: 0; top: 39px; color: #747d68; font-family: var(--serif); font-size: 12px; letter-spacing: .05em; transform: rotate(-7deg); }
+.welcome-note svg { display: block; margin: 4px 0 0 25px; width: 39px; height: 27px; }
+.welcome-illustration figcaption { display: flex; align-items: center; justify-content: center; gap: 11px; margin-top: 12px; font-size: 10px; color: var(--welcome-muted); letter-spacing: .13em; white-space: nowrap; }
+.welcome-illustration figcaption > span { height: 1px; width: 20px; background: #d4d6c7; }
+.welcome-actions { position: relative; width: 100%; text-align: center; }
+.welcome-start { display: flex; align-items: center; justify-content: space-between; min-height: 54px; padding: 0 22px; border: 1px solid var(--welcome-green); border-radius: 14px; color: #fffdf5; background: var(--welcome-green); font-size: 14px; font-weight: 500; letter-spacing: .12em; transition: background .18s, transform .18s; }
+.welcome-start svg { width: 22px; height: 22px; }
+.welcome-invite { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 48px; margin-top: 7px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: #626d59; font: inherit; font-size: 12px; cursor: pointer; }
+.welcome-invite svg { width: 17px; height: 17px; }
+.welcome-invite > span { margin-left: 5px; }
+.welcome-signoff { margin: 12px 0 0; color: #757c70; font-family: var(--serif); font-size: 10px; letter-spacing: .18em; }
+.welcome-page a:focus-visible, .welcome-page button:focus-visible { outline: 2px solid #344b30; outline-offset: 5px; border-radius: 8px; }
+.welcome-start:active { transform: translateY(1px); }
+@media (hover: hover) {
+  .welcome-start:hover { background: #43583f; }
+  .welcome-invite:hover { background: #e9eddf; }
+  .welcome-login:hover { text-decoration: underline; text-underline-offset: 4px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .welcome-intro, .welcome-illustration, .welcome-actions { animation: welcome-arrive .65s both; }
+  .welcome-illustration { animation-delay: .09s; }
+  .welcome-actions { animation-delay: .17s; }
+  @keyframes welcome-arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+}
+@media (max-width: 359px) {
+  .welcome-page { padding-left: 23px; padding-right: 23px; }
+  .welcome-login { font-size: 10px; }
+  .welcome-intro { margin-top: 22px; }
+  .welcome-description { font-size: 11px; }
+  .welcome-scene { width: 274px; height: 254px; }
+  .welcome-arch { left: 48px; width: 190px; height: 216px; }
+  .welcome-puppy { left: 87px; width: 107px; }
+  .welcome-plant { width: 57px; right: -4px; }
+  .welcome-memory { width: 65px; height: 79px; left: 0; }
+  .welcome-memory svg { height: 42px; }
+  .welcome-memory span { font-size: 7px; }
+  .welcome-note { top: 29px; left: -5px; font-size: 11px; }
+  .welcome-rug { left: 22px; width: 210px; }
+  .welcome-illustration figcaption { font-size: 9px; gap: 8px; }
+}
+@media (max-height: 740px) {
+  .welcome-intro { margin-top: 22px; }
+  .welcome-illustration { margin-top: 10px; margin-bottom: 18px; }
+  .welcome-signoff { margin-top: 5px; }
+}
+@media (min-width: 640px) {
+  #app:has(.welcome-page) { max-width: 460px; }
+  .welcome-page { padding-right: 38px; padding-left: 38px; }
+  .welcome-intro { margin-top: 48px; }
+}

@@ -1,0 +1,118 @@
+{
+  "breed": "husky",
+  "label": "哈士奇",
+  "clips": [
+    {
+      "id": "01_idle",
+      "label": "待机",
+      "origin": "creator_native",
+      "duration_seconds": 3.3333333333333335,
+      "loop": true
+    },
+    {
+      "id": "02_idle_relaxed",
+      "label": "放松待机",
+      "origin": "creator_native",
+      "duration_seconds": 3.3333333333333335,
+      "loop": true
+    },
+    {
+      "id": "03_head_low",
+      "label": "低头待机",
+      "origin": "creator_native",
+      "duration_seconds": 4.0,
+      "loop": true
+    },
+    {
+      "id": "04_walk",
+      "label": "行走",
+      "origin": "creator_native",
+      "duration_seconds": 1.0416666666666667,
+      "loop": true
+    },
+    {
+      "id": "05_run",
+      "label": "奔跑",
+      "origin": "creator_native",
+      "duration_seconds": 0.5416666666666666,
+      "loop": true
+    },
+    {
+      "id": "06_running_jump",
+      "label": "跑动跳跃",
+      "origin": "creator_native",
+      "duration_seconds": 0.9166666666666666,
+      "loop": false
+    },
+    {
+      "id": "07_jump_to_idle",
+      "label": "跳跃落地",
+      "origin": "creator_native",
+      "duration_seconds": 1.3333333333333333,
+      "loop": false
+    },
+    {
+      "id": "08_eating",
+      "label": "进食",
+      "origin": "creator_native",
+      "duration_seconds": 2.6666666666666665,
+      "loop": true
+    },
+    {
+      "id": "09_react_left",
+      "label": "左侧受惊",
+      "origin": "creator_native",
+      "duration_seconds": 0.6666666666666666,
+      "loop": false
+    },
+    {
+      "id": "10_react_right",
+      "label": "右侧受惊",
+      "origin": "creator_native",
+      "duration_seconds": 0.6666666666666666,
+      "loop": false
+    },
+    {
+      "id": "11_attack",
+      "label": "扑咬",
+      "origin": "creator_native",
+      "duration_seconds": 1.1666666666666667,
+      "loop": false
+    },
+    {
+      "id": "12_fall_down",
+      "label": "倒地",
+      "origin": "creator_native",
+      "duration_seconds": 1.0416666666666667,
+      "loop": false
+    },
+    {
+      "id": "13_tilt_left",
+      "label": "向左歪头",
+      "origin": "new_gesture_over_creator_idle",
+      "duration_seconds": 4.0,
+      "loop": false
+    },
+    {
+      "id": "14_tilt_right",
+      "label": "向右歪头",
+      "origin": "new_gesture_over_creator_idle",
+      "duration_seconds": 4.0,
+      "loop": false
+    },
+    {
+      "id": "15_nod",
+      "label": "点头",
+      "origin": "new_gesture_over_creator_idle",
+      "duration_seconds": 4.0,
+      "loop": false
+    },
+    {
+      "id": "16_look_around",
+      "label": "左右张望",
+      "origin": "new_gesture_over_creator_idle",
+      "duration_seconds": 4.0,
+      "loop": false
+    }
+  ]
+}

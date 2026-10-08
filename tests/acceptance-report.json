@@ -1,0 +1,614 @@
+{
+  "ranAt": "2026-10-08T03:30:36.121Z",
+  "base": "http://127.0.0.1:4288",
+  "passed": 101,
+  "total": 101,
+  "items": [
+    {
+      "id": "M01a",
+      "name": "单人注册即有小家与小狗",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M01b",
+      "name": "给小狗起名",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M02",
+      "name": "A/B/C 三个独立会话身份互不相同",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M46a",
+      "name": "未登录请求被拒绝(401)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M46b",
+      "name": "伪造 authorId 无效，内容归属本人",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M46c",
+      "name": "伪造字段不改变归属",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M08a",
+      "name": "仅文字可保存",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M08b",
+      "name": "仅照片可保存",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M08c",
+      "name": "两者皆空被拒绝",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M09a",
+      "name": "伪图片类型在服务端被拒绝",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M09b",
+      "name": "超大文件被拒绝",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M48a",
+      "name": "同幂等键同负载重放原结果",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M48b",
+      "name": "同幂等键不同负载返回冲突",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M16a",
+      "name": "手选纪念物与位置",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M16b",
+      "name": "物件出现在房间",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M16c",
+      "name": "替换模板不改内容",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M03a",
+      "name": "生成带预览的邀请",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M06a",
+      "name": "邀请信息可匿名查看但只含已授权预览",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M06b",
+      "name": "匿名打开私密媒体 URL 被拒绝",
+      "pass": true,
+      "detail": "status=401"
+    },
+    {
+      "id": "M06c",
+      "name": "第三方登录会话打开私密媒体被拒(404 不泄露存在)",
+      "pass": true,
+      "detail": "status=404"
+    },
+    {
+      "id": "M04b",
+      "name": "撤销后的邀请不可接受",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M04c",
+      "name": "不能接受自己的邀请",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M03b",
+      "name": "B 明确接受后建立两人关系",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M03c",
+      "name": "B 当前家为共同家",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M04a",
+      "name": "已消费的邀请不能再次使用",
+      "pass": true,
+      "detail": "status=409 {\"code\":\"INVITE_USED\",\"message\":\"这份邀请已经被使用过了\"}"
+    },
+    {
+      "id": "M05",
+      "name": "并发接受只允许一对（另一请求被拒）",
+      "pass": true,
+      "detail": "D=200 B=409"
+    },
+    {
+      "id": "M07a",
+      "name": "B 列表看不到 A 的私密回忆",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M07b",
+      "name": "B 直接访问 A 私密回忆被拒",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M07c",
+      "name": "B 无法读取 A 私密媒体",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M11a",
+      "name": "B 给同件回忆补充自己的视角",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M11b",
+      "name": "同一容器两人视角独立署名",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M12",
+      "name": "两人同时编辑互不覆盖",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M12b",
+      "name": "编辑后内容各自正确",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M13a",
+      "name": "A 修改 B 的贡献被拒",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M13b",
+      "name": "A 删除 B 的贡献被拒",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M17",
+      "name": "抢占同一位置返回冲突与空位",
+      "pass": true,
+      "detail": "status=409"
+    },
+    {
+      "id": "M18a",
+      "name": "收纳成功",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M18b",
+      "name": "收纳盒里能找到",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M18c",
+      "name": "放回后记录未减少",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M49",
+      "name": "旧 expectedRevision 更新返回冲突",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M24a",
+      "name": "共同承诺创建后为待确认",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M24b",
+      "name": "\"我也愿意\"后成为共同约定",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M25",
+      "name": "重要修改后需对方重新确认",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M26a",
+      "name": "一方可记下完成且记录操作者",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M26b",
+      "name": "另一方可撤回完成标记并说明",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M27a",
+      "name": "未来与 2/29 年度纪念日可保存",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M28",
+      "name": "平年 2/29 按 2/28 计算下一次",
+      "pass": true,
+      "detail": "2027-02-28"
+    },
+    {
+      "id": "M28b",
+      "name": "今天的纪念日显示\"就是今天\"",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M29a",
+      "name": "站内提醒生成且带日期",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M29b",
+      "name": "重复拉取不重复发送",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M20a",
+      "name": "个人隐藏后默认列表不出现",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M20b",
+      "name": "不影响对方设置",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M22",
+      "name": "搜索只含当前有权内容",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M22b",
+      "name": "第三人不出现他人内容",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M19a",
+      "name": "仅一方请求时未移除",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M19b",
+      "name": "双方同意后移除共同入口且本人内容保留",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M31a",
+      "name": "仅本人内容可直接建作品任务",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M31b",
+      "name": "任务完成状态真实",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M31c",
+      "name": "下载的是真实 PNG 文件",
+      "pass": true,
+      "detail": "336 bytes"
+    },
+    {
+      "id": "M32",
+      "name": "未授权的对方内容作品被拒",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M32b",
+      "name": "可以发起具体版本授权请求",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M32c",
+      "name": "授权请求到达对方",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M32-approve",
+      "name": "对方可批准具体版本授权",
+      "pass": true,
+      "detail": "status=200 {}"
+    },
+    {
+      "id": "M32d",
+      "name": "获得授权后作品任务可建立",
+      "pass": true,
+      "detail": "status=201 {\"workId\":\"wrk_zfBT8u5GKzPf\",\"status\":\"queued\"}"
+    },
+    {
+      "id": "M33",
+      "name": "内容更新后旧授权作品停止下载",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M14a",
+      "name": "本人撤回共享立即生效",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M14b",
+      "name": "对方看不到撤回的内容",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M15",
+      "name": "删除本人贡献不删对方记录",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M43",
+      "name": "首次共同回忆外观双方各一次",
+      "pass": true,
+      "detail": "A=1 B=1"
+    },
+    {
+      "id": "M30",
+      "name": "免费导出本人内容为真实 ZIP",
+      "pass": true,
+      "detail": "1997 bytes"
+    },
+    {
+      "id": "M30b",
+      "name": "导出不含对方正文",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M38",
+      "name": "暂停只影响本人设置",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "B08a",
+      "name": "全角横线密码可再次登录",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "B08b",
+      "name": "错误密码仍被拒绝",
+      "pass": true,
+      "detail": "status=422"
+    },
+    {
+      "id": "B06a",
+      "name": "双方撤回后 B 仍能打开详情",
+      "pass": true,
+      "detail": "status=200"
+    },
+    {
+      "id": "B06b",
+      "name": "B 只看到自己的内容且标记 own",
+      "pass": true,
+      "detail": "\"own\""
+    },
+    {
+      "id": "B06c",
+      "name": "B 列表包含该回忆且 A 的正文不泄露",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "B07a",
+      "name": "移除前导出含本人文字",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "B07b",
+      "name": "移除后导出仍含本人文字",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "B10a",
+      "name": "授权预览返回申请时的具体内容",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "B01a",
+      "name": "无关联 C 读取作品媒体被拒(404)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "B01b",
+      "name": "未登录读取作品媒体被拒",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "B01c",
+      "name": "拥有者此时可读作品媒体",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "B01d",
+      "name": "撤回授权后下载被拒",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "B01e",
+      "name": "撤回授权后媒体读取被拒且不返回图片字节",
+      "pass": true,
+      "detail": "status=404"
+    },
+    {
+      "id": "B09a",
+      "name": "删除已完成作品返回成功且状态变更",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "B09b",
+      "name": "删除后下载被拒",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "B09c",
+      "name": "删除后媒体读取被拒",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M51",
+      "name": "重启后登录态与数据保留",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M39",
+      "name": "单方解除立即生效",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M40a",
+      "name": "B 回到个人空间",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M40b",
+      "name": "解除后旧媒体交叉访问被拒",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M40c",
+      "name": "解除后旧容器归档视图只含本人内容",
+      "pass": true,
+      "detail": "status=200"
+    },
+    {
+      "id": "M41",
+      "name": "解除后仍可免费导出本人内容",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "M42",
+      "name": "解除后小狗陪伴延续（含名字）",
+      "pass": true,
+      "detail": "团子"
+    },
+    {
+      "id": "ADM01",
+      "name": "种子管理员可登录",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "ADM02",
+      "name": "管理员可看运营统计",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "ADM03",
+      "name": "用户列表不含密码/内容字段",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "ADM04",
+      "name": "普通用户访问管理接口被拒(403)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "ADM05",
+      "name": "管理员也不能读他人私密回忆(404)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "ADM06",
+      "name": "伪造 isAdmin 字段不生效",
+      "pass": true,
+      "detail": ""
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+node_modules/
+data/
+.env
+*.log
+
+# v3.6：本机机密（绝不提交/打包）
+.env.local
+contracts/build/node_modules/

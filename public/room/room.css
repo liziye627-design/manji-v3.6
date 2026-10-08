@@ -1,0 +1,55 @@
+.interactive-room { --room-ink:#4a3b32; --room-muted:#8c7d73; --room-line:#eaddce; color:var(--room-ink); }
+.room-viewport { position:relative; width:100%; height:410px; height:clamp(330px,93vw,425px); overflow:hidden; background:#f7f1e8; border-radius:26px; isolation:isolate; }
+.room-canvas { position:absolute; inset:0; }
+.room-canvas canvas { display:block; width:100%; height:100%; cursor:crosshair; touch-action:pan-y; }
+.room-canvas>img { width:100%; height:100%; object-fit:contain; }
+.room-loading { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; background:#f7f1e8; color:#8c7d73; font-size:13px; }
+.room-loading-dot { height:9px; width:9px; border-radius:50%; background:#c99c68; box-shadow:18px 0 #e5ceb3,-18px 0 #e5ceb3; animation:room-breathe 1.5s ease-in-out infinite alternate; }
+.room-scene-label { position:absolute; left:17px; top:16px; display:flex; gap:7px; align-items:center; color:#8b7868; font-size:9px; letter-spacing:2px; pointer-events:none; }
+.room-scene-label>span { width:5px; height:5px; border-radius:100%; background:#b49168; }
+.room-reset-view { position:absolute; right:10px; top:7px; width:42px; height:42px; border-radius:50%; border:1px solid #fff9; color:#86694f; background:#ffffffa6; font-size:23px; cursor:pointer; }
+.room-focus { position:absolute; right:58px; top:7px; min-height:42px; padding:0 11px; border-radius:100px; border:1px solid #fff9; background:#ffffffad; color:#886c54; font-size:10px; cursor:pointer; }
+.room-focus[aria-pressed=true] { background:#eadcc9; color:#5b4030; }
+.room-bubble { position:absolute; transform:translate(-50%,-100%); max-width:210px; padding:9px 13px; border:1px solid #eee0d0; border-radius:16px 16px 16px 3px; background:#fffdf6f2; box-shadow:0 5px 15px #5f422015; color:#6c5143; font-size:12px; text-align:center; pointer-events:none; }
+.room-memory-layer { position:absolute; inset:0; pointer-events:none; }
+.room-memory-pin { pointer-events:auto; position:absolute; transform:translate(-50%,-80%); width:36px; height:36px; border:1px solid #fffa; border-radius:50%; color:#a27647; background:#fff9e5c9; backdrop-filter:blur(6px); box-shadow:0 4px 12px #794b2220; cursor:pointer; }
+.room-memory-pin:hover,.room-memory-pin:focus-visible { background:#fff1c7; outline:2px solid #b99c68; }
+.room-companion-dock { position:relative; padding:18px 4px 4px; }
+.room-dock-heading { display:flex; align-items:center; justify-content:space-between; margin:0 2px 12px; }
+.room-eyebrow { font-size:13px; font-family:var(--serif,serif); letter-spacing:1px; }
+.room-live-dot { font-size:10px; color:#8d977c; display:flex; gap:5px; align-items:center; }
+.room-live-dot::before { content:''; width:5px; height:5px; background:#9fac8e; border-radius:50%; }
+.room-dog-choices { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.room-dog-choices button { display:flex; align-items:center; justify-content:center; gap:7px; border:1px solid #ebdfd3; background:#fffcf7; min-width:0; min-height:52px; padding:4px 6px; border-radius:18px; color:#867263; cursor:pointer; font:inherit; font-size:12px; transition:background .15s,border-color .15s; }
+.room-dog-choices button[aria-pressed=true] { border-color:#a46f54; background:#f1e6da; color:#5b3d2e; box-shadow:inset 0 1px #fff9; }
+.room-dog-choices img { width:36px; height:36px; object-fit:cover; border-radius:50%; mix-blend-mode:multiply; }
+.room-status-row { display:flex; align-items:center; justify-content:space-between; gap:7px; min-height:45px; }
+.room-status { flex:1; margin:8px 0; font-size:12px; color:#7b6a5f; line-height:1.6; }
+.room-stop { border:0; background:transparent; font-size:11px; text-decoration:underline; text-underline-offset:4px; color:#a25c46; padding:10px; cursor:pointer; min-height:44px; }
+.room-stop:disabled { visibility:hidden; }
+.room-progress { display:block; width:100%; appearance:none; -webkit-appearance:none; border:0; height:3px; border-radius:3px; background:#eee5d9; margin:0 0 12px; overflow:hidden; opacity:.55; }
+.room-progress[data-busy=true] { opacity:1; }
+.room-progress::-webkit-progress-bar { background:#eee5d9; }
+.room-progress::-webkit-progress-value { background:#c19665; border-radius:3px; }
+.room-progress::-moz-progress-bar { background:#c19665; }
+.room-primary-actions { display:grid; grid-template-columns:1.1fr .9fr 1.15fr; gap:7px; }
+.room-primary-actions button { border:1px solid #e4d6c9; border-radius:100px; min-height:44px; padding:10px 8px; background:#f8f1e9; color:#72523d; font-size:12px; cursor:pointer; white-space:nowrap; }
+.room-primary-actions button:first-child { color:#fff9ef; background:#4a3b32; border-color:#4a3b32; box-shadow:0 5px 12px #4a3b3220; }
+.room-primary-actions span { padding-left:4px; }
+.room-primary-actions button:active { transform:scale(.97); }
+.room-primary-actions button:disabled { opacity:.4; cursor:wait; }
+.room-help { margin:11px 0 12px; font-size:10px; color:#9e8c7e; text-align:center; letter-spacing:.3px; }
+.room-more { border-top:1px solid #eee2d7; padding-top:1px; }
+.room-more summary { min-height:44px; cursor:pointer; padding:12px 2px; display:flex; align-items:center; gap:8px; font-size:12px; color:#887264; }
+.room-more summary::after { content:'＋'; margin-left:auto; }
+.room-more[open] summary::after { content:'−'; }
+.room-more summary span { color:#ba9a7e; font-size:10px; }
+.room-action-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; padding-bottom:10px; }
+.room-action-grid button { border:1px solid #eadccc; background:#fffdf9; color:#7b6050; border-radius:12px; min-height:44px; font-size:11px; padding:7px 2px; cursor:pointer; }
+.room-action-grid button:hover { background:#f2e7db; border-color:#cfa47e; }
+.room-context-button,.room-retry { width:100%; border:0; border-radius:18px; padding:13px 16px; min-height:46px; color:#914a3c; background:#f5e8e4; margin:2px 0 12px; text-align:left; cursor:pointer; font:inherit; font-size:12px; }
+.room-motion-note { font-size:11px; color:#8c7d73; }
+.interactive-room button:focus-visible,.room-more summary:focus-visible { outline:2px solid #9f7955; outline-offset:3px; }
+@keyframes room-breathe { to { opacity:.4; } }
+@media(prefers-reduced-motion:reduce) { .room-loading-dot { animation:none; } }
+.reduce-motion .room-loading-dot { animation:none; }

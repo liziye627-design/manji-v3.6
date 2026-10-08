@@ -1,0 +1,40 @@
+{
+  "app": "manji",
+  "contract": "ManjiEternalChain",
+  "network": "BOT Chain Mainnet",
+  "chainId": 677,
+  "rpc": "https://rpc.botchain.ai",
+  "explorer": "https://scan.botchain.ai",
+  "address": "0x9757b6fd786fb77545a288e98fc06a6c04bfc627",
+  "deployTx": "0x7961f1650163b75d52448235912acbb7e47a3e29b5d5e9253895527fb2448a4b",
+  "blockNumber": 25925515,
+  "gasUsed": 800625,
+  "deployer": "0x4844F22482B0e08dc9b44d153a723863F576b178",
+  "deployedAt": "2026-10-08T03:02:32.289Z",
+  "compiler": {
+    "version": "0.8.24",
+    "evmVersion": "paris",
+    "optimizer": { "enabled": true, "runs": 200 }
+  },
+  "roles": {
+    "owner": "0x4844F22482B0e08dc9b44d153a723863F576b178（部署者，链上 owner() 已核验）",
+    "relayer": "0x4844F22482B0e08dc9b44d153a723863F576b178（统一代提交账户，链上 relayer() 已核验；私钥只存部署机的 .env.local，绝不入仓库与交付包）"
+  },
+  "mainnetVerification": [
+    {
+      "step": "部署交易在浏览器确认为 Success，eth_getCode 读到 3361 字节合约代码",
+      "tx": "0x7961f1650163b75d52448235912acbb7e47a3e29b5d5e9253895527fb2448a4b"
+    },
+    {
+      "step": "seal(0x1111…11) 测试指纹登记成功，gas 90731，sealOf 核验 found=true index=0",
+      "tx": "0x1f11efed9e0958e200cfc06fc811cf297319ba8c89527e4a01bace8703cd615e"
+    },
+    {
+      "step": "应用端到端实测：约定+日记两条承诺经 sealBatch 一笔交易登记（index=5、6），sealOf 核验通过；本地永恒之链头部（高度 2）anchorHead 锚定成功并确认",
+      "tx": "0x2402891f6264c32fc35d65cd23e4283f0d25f5f9d8dbe470ccf055efe7f57040",
+      "headAnchorTx": "0xba19388f8f97b1bad8923abea18657b8c78b00d50084e46fbca2989e1cec1dd8"
+    }
+  ],
+  "chainIdDerivation": "anchorHead 的 localChainId(bytes16) = SHA-256(应用链编号 base64url 字符串) 前 16 字节；导出文件里的 chainId 按同一规则即可复算",
+  "note": "本文件不含任何私钥。合约没有升级/暂停/删除数据的函数；owner 唯一后台操作是 setRelayer 轮换代提交账户。"
+}

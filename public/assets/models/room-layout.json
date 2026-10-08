@@ -1,0 +1,470 @@
+{
+  "schemaVersion": 1,
+  "source": "ConsensusBell-V4/reference/environment/home_room.blend",
+  "coordinateSystem": {
+    "up": "+Y",
+    "front": "+Z",
+    "units": "metres",
+    "fromBlender": "[x,z,-y]"
+  },
+  "bounds": {
+    "xMin": -2.93,
+    "xMax": 3.041,
+    "zMin": -2.32,
+    "zMax": 2.509
+  },
+  "environmentBounds": {
+    "min": [
+      -3.16,
+      -0.31,
+      -2.64
+    ],
+    "max": [
+      3.1,
+      3.24,
+      2.6
+    ]
+  },
+  "obstacles": [
+    {
+      "id": "window.001",
+      "assetId": "window",
+      "xMin": 0.22,
+      "xMax": 2.46,
+      "zMin": -2.525,
+      "zMax": -2.01
+    },
+    {
+      "id": "sofa.001",
+      "assetId": "sofa",
+      "xMin": -2.5678,
+      "xMax": 0.2078,
+      "zMin": -1.3032,
+      "zMax": 0.130717
+    },
+    {
+      "id": "coffee_table.001",
+      "assetId": "coffee_table",
+      "xMin": 0.804,
+      "xMax": 2.316,
+      "zMin": 0.62324,
+      "zMax": 1.69676
+    },
+    {
+      "id": "floor_lamp.001",
+      "assetId": "floor_lamp",
+      "xMin": -2.95418,
+      "xMax": -2.12582,
+      "zMin": -1.73418,
+      "zMax": -0.90582
+    },
+    {
+      "id": "bookshelf.001",
+      "assetId": "bookshelf",
+      "xMin": 2.0655,
+      "xMax": 2.9545,
+      "zMin": -0.643,
+      "zMax": -0.2958
+    },
+    {
+      "id": "plant.001",
+      "assetId": "plant",
+      "xMin": 2.015991,
+      "xMax": 2.910306,
+      "zMin": -2.344869,
+      "zMax": -1.445879
+    },
+    {
+      "id": "plant.002",
+      "assetId": "plant",
+      "xMin": -2.884975,
+      "xMax": -2.371409,
+      "zMin": 1.050273,
+      "zMax": 1.566525
+    }
+  ],
+  "agentRadius": 0.38,
+  "navigationNotes": [
+    "Bounds and obstacle AABBs are raw. Navigation must inset bounds and expand obstacles once by agentRadius.",
+    "The connected roaming area is the front lounge. Furniture blocks access to the rear at this radius; unreachable targets must not teleport.",
+    "Waypoints do not promise simultaneous clearance from the other dogs; use live agent avoidance."
+  ],
+  "groundY": 0.09,
+  "ground": {
+    "floorY": 0.015,
+    "footClearance": 0.003,
+    "edgeBlendWidth": 0.12,
+    "rug": {
+      "cx": -0.52,
+      "cz": 0.9,
+      "rx": 1.6008,
+      "rz": 1.216608,
+      "heightY": 0.07772,
+      "stitchTopY": 0.080894
+    }
+  },
+  "spawns": {
+    "shiba": {
+      "x": -1.43,
+      "z": 1.04,
+      "yaw": 0.24,
+      "scale": 0.78
+    },
+    "husky": {
+      "x": -0.48,
+      "z": 0.64,
+      "yaw": 0.12,
+      "scale": 0.75
+    },
+    "pug": {
+      "x": 0.38,
+      "z": 1.28,
+      "yaw": -0.22,
+      "scale": 0.82
+    }
+  },
+  "waypoints": [
+    {
+      "id": "lounge_left",
+      "label": "沙发前左侧",
+      "x": -1.6,
+      "z": 0.75
+    },
+    {
+      "id": "rug_front",
+      "label": "地毯前方",
+      "x": -0.7,
+      "z": 1.7
+    },
+    {
+      "id": "table_left",
+      "label": "茶几左侧",
+      "x": 0.24,
+      "z": 1.35
+    },
+    {
+      "id": "left_front",
+      "label": "窗光里的地毯",
+      "x": -1.7,
+      "z": 1.6
+    },
+    {
+      "id": "sofa_front",
+      "label": "沙发前",
+      "x": -0.55,
+      "z": 0.68
+    },
+    {
+      "id": "front_edge",
+      "label": "地毯与木地板交界",
+      "x": -0.35,
+      "z": 2.0
+    }
+  ],
+  "camera": {
+    "position": [
+      8.0,
+      8.0,
+      12.0
+    ],
+    "target": [
+      0,
+      1.16,
+      -0.1
+    ],
+    "direction": [
+      -0.498836,
+      -0.426505,
+      -0.75449
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ],
+    "orthoHeight": 10.15,
+    "halfWidth": 4.229167,
+    "halfHeight": 5.075,
+    "near": 0.10000000149011612,
+    "far": 1000.0,
+    "originalAspect": 0.8333333333333334,
+    "fitBounds": {
+      "min": [
+        -3.16,
+        -0.31,
+        -2.64
+      ],
+      "max": [
+        3.1,
+        3.24,
+        2.6
+      ]
+    }
+  },
+  "slots": {
+    "shelf": [
+      -1.5,
+      1.977,
+      -2.05
+    ],
+    "table": [
+      1.5,
+      0.720636,
+      1.2
+    ],
+    "window": [
+      1.3,
+      0.26,
+      -2.1
+    ],
+    "wall": [
+      -0.2,
+      2.1,
+      -2.25
+    ],
+    "storage": [
+      2.5,
+      0.55,
+      -0.5
+    ],
+    "side_wall": [
+      -2.9,
+      2.1,
+      0.1
+    ]
+  },
+  "placedAssets": [
+    {
+      "name": "window.001",
+      "assetId": "window",
+      "position": [
+        1.34,
+        0.0,
+        -2.34
+      ],
+      "bounds": {
+        "min": [
+          0.22,
+          0.0,
+          -2.525
+        ],
+        "max": [
+          2.46,
+          2.765,
+          -2.01
+        ]
+      }
+    },
+    {
+      "name": "sofa.001",
+      "assetId": "sofa",
+      "position": [
+        -1.18,
+        -0.01,
+        -0.72
+      ],
+      "bounds": {
+        "min": [
+          -2.5678,
+          0.017,
+          -1.3032
+        ],
+        "max": [
+          0.2078,
+          1.583,
+          0.130717
+        ]
+      }
+    },
+    {
+      "name": "rug.001",
+      "assetId": "rug",
+      "position": [
+        -0.52,
+        0.0032,
+        0.9
+      ],
+      "bounds": {
+        "min": [
+          -2.204575,
+          0.017,
+          -0.316608
+        ],
+        "max": [
+          1.164575,
+          0.080894,
+          2.116608
+        ]
+      }
+    },
+    {
+      "name": "coffee_table.001",
+      "assetId": "coffee_table",
+      "position": [
+        1.56,
+        -0.027264,
+        1.16
+      ],
+      "bounds": {
+        "min": [
+          0.804,
+          0.017,
+          0.62324
+        ],
+        "max": [
+          2.316,
+          0.720636,
+          1.69676
+        ]
+      }
+    },
+    {
+      "name": "floor_lamp.001",
+      "assetId": "floor_lamp",
+      "position": [
+        -2.54,
+        0.02,
+        -1.32
+      ],
+      "bounds": {
+        "min": [
+          -2.95418,
+          0.02,
+          -1.73418
+        ],
+        "max": [
+          -2.12582,
+          2.13928,
+          -0.90582
+        ]
+      }
+    },
+    {
+      "name": "bookshelf.001",
+      "assetId": "bookshelf",
+      "position": [
+        2.51,
+        0.02,
+        -0.44
+      ],
+      "bounds": {
+        "min": [
+          2.0655,
+          0.02,
+          -0.643
+        ],
+        "max": [
+          2.9545,
+          1.892195,
+          -0.2958
+        ]
+      }
+    },
+    {
+      "name": "plant.001",
+      "assetId": "plant",
+      "position": [
+        2.46,
+        0.02,
+        -1.91
+      ],
+      "bounds": {
+        "min": [
+          2.015991,
+          0.02,
+          -2.344869
+        ],
+        "max": [
+          2.910306,
+          1.446471,
+          -1.445879
+        ]
+      }
+    },
+    {
+      "name": "plant.002",
+      "assetId": "plant",
+      "position": [
+        -2.63,
+        0.025,
+        1.3
+      ],
+      "bounds": {
+        "min": [
+          -2.884975,
+          0.025,
+          1.050273
+        ],
+        "max": [
+          -2.371409,
+          0.844162,
+          1.566525
+        ]
+      }
+    },
+    {
+      "name": "treasure_boat.001",
+      "assetId": "treasure_boat",
+      "position": [
+        1.41,
+        0.720636,
+        1.13
+      ],
+      "bounds": {
+        "min": [
+          1.170955,
+          0.720636,
+          0.957547
+        ],
+        "max": [
+          1.649045,
+          1.075934,
+          1.302453
+        ]
+      }
+    },
+    {
+      "name": "treasure_camera.001",
+      "assetId": "treasure_camera",
+      "position": [
+        -1.64,
+        1.977,
+        -2.18
+      ],
+      "bounds": {
+        "min": [
+          -1.755,
+          1.977,
+          -2.251294
+        ],
+        "max": [
+          -1.525,
+          2.184999,
+          -2.108706
+        ]
+      }
+    },
+    {
+      "name": "treasure_envelope.001",
+      "assetId": "treasure_envelope",
+      "position": [
+        -1.23,
+        1.977,
+        -2.18
+      ],
+      "bounds": {
+        "min": [
+          -1.3146,
+          1.977,
+          -2.194523
+        ],
+        "max": [
+          -1.1454,
+          2.08228,
+          -2.165477
+        ]
+      }
+    }
+  ],
+  "materialNotes": "PBR base colour, metallic, roughness, emission and normals retained. Blender procedural textile noise is not a glTF texture; microscopic textile bump is omitted."
+}

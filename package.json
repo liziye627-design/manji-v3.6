@@ -1,0 +1,21 @@
+{
+  "name": "manji",
+  "version": "3.6.0",
+  "description": "慢记 Manji —— 两个人的回忆小家：三犬 3D 客厅、约定与日记、永恒之链上链存证，v3.6 支持把日记与约定的承诺提交 BOT Chain 公共链。",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node tests/run-acceptance.mjs",
+    "test:chain": "node tests/chain-acceptance.mjs",
+    "test:onchain": "node tests/onchain-acceptance.mjs",
+    "compile:contract": "node scripts/compile-contract.mjs",
+    "test:navigation": "node --test tests/navigation.test.mjs"
+  },
+  "optionalDependencies": {
+    "ethers": "^6.17.0"
+  }
+}
