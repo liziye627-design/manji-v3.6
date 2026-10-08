@@ -1,6 +1,7 @@
 // 慢记 Manji v3.3 —— 可互动的三犬小屋，沿用原账户与回忆接口。
 import { dogSVG, objectIcon, tabIcon, bellIcon, toolIcon, dogPoseImg } from './assets/art.js';
 import { mountRoom } from './room/room.js';
+import { mountPuppyHero } from './puppy/puppy3d.js';
 
 // ================= 工具 =================
 const $app = document.getElementById('app');
@@ -419,7 +420,9 @@ function viewWelcome() {
         <div class="welcome-rug"></div>
         <div class="welcome-memory"><svg viewBox="0 0 54 48" fill="none"><path d="m9 24 18-14 18 14M14 21v18h26V21M23 39V28h8v11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M25 19c-7-5-1-9 2-5 3-4 9 0 2 5l-2 1.5Z" fill="currentColor"/></svg><span>我们的第一天</span></div>
         <img class="welcome-plant" src="/assets/img/obj-plant.png" width="76" height="119" alt="" decoding="async">
-        <img class="welcome-puppy" src="/assets/img/dog-sit.png" width="134" height="226" alt="" fetchpriority="high" decoding="async">
+        <div class="welcome-puppy-stage" id="welcome-puppy-stage">
+          <img class="welcome-puppy" src="/assets/img/dog-sit.png" width="134" height="226" alt="" fetchpriority="high" decoding="async">
+        </div>
         <span class="welcome-note">等你们回家<svg viewBox="0 0 50 34" fill="none"><path d="M5 5c16-3 32 2 31 20m-7-5 7 7 6-8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       </div>
       <figcaption><span></span> 一间小屋 · 两个人 · 许多以后 <span></span></figcaption>
@@ -431,6 +434,12 @@ function viewWelcome() {
       <p class="welcome-signoff">不赶时间，慢慢喜欢。</p>
     </footer>
   </main>`;
+  // 登录界面的小狗：优先用优化后的 3D 模型渲染，插画作为加载与降级态。
+  const puppyStage = document.getElementById('welcome-puppy-stage');
+  if (puppyStage) mountPuppyHero(puppyStage, {
+    reduced: matchMedia('(prefers-reduced-motion: reduce)').matches,
+    onReveal: () => puppyStage.classList.add('is-live'),
+  });
   document.getElementById('welcome-invite').onclick = () => {
     openModal(`<h3>有邀请链接？</h3>
       <p class="muted tiny" style="text-align:center">把对方分享给你的邀请链接粘贴到这里，打开后就能回家。</p>

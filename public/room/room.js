@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { planPath, segmentIsWalkable } from './navigation.js';
 import { createDog2D } from './dog2d.js';
+import { createPuppy3D } from './puppy-companion.js';
 
 const BASE = '/assets/models/';
 const BREEDS = ['shiba', 'husky', 'pug'];
@@ -67,7 +68,7 @@ export async function mountRoom(host, options = {}) {
       events: events.slice(), dogs: [...dogs.values()].map(d => ({ id: d.id, position: point(d.wrapper), mode: d.mode,
         clip: d.current?.getClip().name, clipTime: d.current?.time, duration: d.current?.getClip().duration,
         path: d.path?.map(p => ({ ...p })) || [], goal: d.goal, queued: d.pending?.type || null, completed: d.completed,
-        weight: d.current?.getEffectiveWeight(), visible: d.wrapper.visible, renderStyle: '2d', animation: d.visual.snapshot() })) }),
+        weight: d.current?.getEffectiveWeight(), visible: d.wrapper.visible, renderStyle: d.visual.meta.style, animation: d.visual.snapshot() })) }),
     project: (p) => project(p),
     projectDog: id => { const d = dogs.get(id); if (!d) return null; return project({ x: d.wrapper.position.x, y: d.wrapper.position.y + .42, z: d.wrapper.position.z }); },
     dispose,
@@ -311,7 +312,11 @@ export async function mountRoom(host, options = {}) {
     const loader = new GLTFLoader();
     const loadModel = async file => { const data = await loader.loadAsync(BASE + file); if (disposed) disposeTree(data.scene); else ownedTrees.add(data.scene); return data; };
     const [layoutData, roomData] = await Promise.all([json(BASE + 'room-layout.json'), loadModel('home-room.glb')]);
-    const dogData = BREEDS.map(id => ({ id, visual: createDog2D(id) }));
+    // 首页小狗使用优化后的 3D 模型；模型加载失败时逐只回退到原创 2D 伙伴，交互保持可用。
+    const dogData = await Promise.all(BREEDS.map(async id => {
+      try { return { id, visual: await createPuppy3D(id) }; }
+      catch (error) { console.warn(`3D 小狗(${id})加载失败，使用 2D 伙伴：`, error?.message || error); return { id, visual: createDog2D(id) }; }
+    }));
     for (const d of dogData) ownedTrees.add(d.visual.model);
     if (!ensureConnected()) return controller;
     layout = layoutData; room = roomData.scene; scene.add(room);

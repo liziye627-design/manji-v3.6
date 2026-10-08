@@ -49,6 +49,12 @@ body:has(.welcome-page) { background: #e8ebe3; }
 .welcome-floor { position: absolute; left: -15px; right: -15px; bottom: 18px; height: 1px; background: linear-gradient(90deg, transparent, #dcdccb 18%, #dcdccb 82%, transparent); }
 .welcome-rug { position: absolute; left: 35px; bottom: 3px; width: 225px; height: 46px; border-radius: 50%; background: #e9e4d5; border: 5px solid #f0ebe0; transform: rotate(-4deg); }
 .welcome-puppy { display: block; position: absolute; left: 104px; bottom: 15px; width: 123px; height: auto; filter: drop-shadow(2px 6px 4px #6b57351a); transform-origin: center bottom; }
+/* 3D 小狗舞台：与插画小狗同位锚定，模型就绪后交叉淡入；插画保留为加载与降级态 */
+.welcome-puppy-stage { position: absolute; left: 88px; bottom: 7px; width: 155px; height: 225px; pointer-events: none; }
+.welcome-puppy-stage .welcome-puppy { left: 50%; bottom: 0; transform: translateX(-50%); }
+.welcome-puppy-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .8s ease; }
+.welcome-puppy-stage.is-live canvas { opacity: 1; }
+.welcome-puppy-stage.is-live .welcome-puppy { opacity: 0; transition: opacity .45s ease .3s; }
 .welcome-plant { position: absolute; right: 0; bottom: 20px; width: 70px; height: auto; opacity: .94; }
 .welcome-memory { position: absolute; left: 6px; bottom: 45px; width: 79px; height: 92px; padding: 8px 5px 5px; background: #fffdf7; border: 1px solid #e5dfcf; transform: rotate(-10deg); color: #a0ac8c; box-shadow: 0 3px 5px #4e58300a; }
 .welcome-memory::before { content: ""; position: absolute; width: 34px; height: 12px; left: 23px; top: -7px; background: #d7d4ba9c; transform: rotate(5deg); }
@@ -86,6 +92,8 @@ body:has(.welcome-page) { background: #e8ebe3; }
   .welcome-scene { width: 274px; height: 254px; }
   .welcome-arch { left: 48px; width: 190px; height: 216px; }
   .welcome-puppy { left: 87px; width: 107px; }
+  .welcome-puppy-stage { left: 74px; bottom: 5px; width: 133px; height: 196px; }
+  .welcome-puppy-stage .welcome-puppy { width: 107px; }
   .welcome-plant { width: 57px; right: -4px; }
   .welcome-memory { width: 65px; height: 79px; left: 0; }
   .welcome-memory svg { height: 42px; }
