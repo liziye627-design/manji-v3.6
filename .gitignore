@@ -6,3 +6,6 @@ data/
 # v3.6：本机机密（绝不提交/打包）
 .env.local
 contracts/build/node_modules/
+
+# 本机工具生成的忽略文件
+.zcodeignore
