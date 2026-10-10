@@ -3504,7 +3504,7 @@ function openAnchorModal({ type, id, snippet, shared }) {
             <div><span class="muted tiny">区块哈希</span><div class="chain-hash">${res.blockHash}</div></div>
             <div><span class="muted tiny">内容承诺</span><div class="chain-hash">${res.commitment}</div></div>
           </div>
-          <p class="muted tiny" style="margin:4px 0 10px">想让它永远作数？现在就用钱包把这个指纹刻上 <b>BOT Chain 主网</b>——从那一刻起，它不依赖任何服务器，任何人（包括我们自己）都无法修改。</p>
+          <p class="muted tiny" style="margin:4px 0 10px">本地链只能防<b>意外</b>改动；要防「任何人——包括慢记自己」的篡改与删除，只有 BOT Chain 主网做得到。现在就用钱包把这个指纹刻上主网：从此它不依赖任何服务器，凭据在慢记消失后依然可验。</p>
           <div class="btn-row"><button class="btn ghost" id="anchor-close">好</button>
           <button class="btn primary" id="anchor-seal-mainnet">⛓ 刻上 BOT 主网</button></div>
         </div>`;
@@ -3806,9 +3806,32 @@ async function viewChain() {
         合约 ${st.contract}${addrUrl ? `（<a class="mono-link" target="_blank" rel="noopener" href="${addrUrl}">${shortHex(st.contract)} · 浏览器</a>）` : ''}
         ${st.explorer ? ` · <a class="mono-link" target="_blank" rel="noopener" href="${st.explorer}">scan.botchain.ai</a>` : ''}
       </div>
+      ${headAnchorHtml()}
       <div class="bc-wallet" id="bc-wallet"></div>
       <p class="muted tiny" style="margin:8px 0 0">上链的只有这句话的指纹（哈希），没有正文、照片或成员身份；登记一旦确认永久不可撤回。连接钱包后，由<b>你的钱包</b>直接签名把承诺写上 BOT 主网。· <a href="#/verify">任何人可免登录核验 →</a></p>
+      <p class="bc-why muted tiny" style="margin:8px 0 0"><b>为什么必须上链：</b>本地链只能防意外改动；只有 BOT Chain 主网能让「任何人——包括慢记自己」都无法篡改、倒填或删除，且慢记哪天不在了，凭据依然可验。这一层，服务器给不了。</p>
     </div>`;
+  }
+
+  /** 头部锚定行：全链历史被 BOT Chain 固定的公开证明（只有公共链能给的一层保证） */
+  function headAnchorHtml() {
+    const h = oc && oc.st && oc.st.headAnchor;
+    if (!h) return '';
+    if (h.status === 'confirmed') {
+      const link = h.explorerUrl ? `（<a class="mono-link" target="_blank" rel="noopener" href="${h.explorerUrl}">锚定交易 ↗</a>）` : '';
+      return `<div class="bc-anchor ok" title="anchorHead：一笔主网交易固定这条本地链截至当前高度的全部历史">
+        <span class="ic">✓</span>
+        <div><b>全链历史已锚定 BOT 主网</b>（本地高度 ${h.localHeight}）${link}
+        <div class="muted tiny">即使慢记的数据库整个消失或被改写，任何人都能凭导出文件与主网锚点复原并证伪。</div></div>
+      </div>`;
+    }
+    if (h.status === 'submitted' || h.status === 'pending') {
+      return `<div class="bc-anchor"><span class="ic">⛓</span><div>全链历史正在锚定 BOT 主网（本地高度 ${h.localHeight}）…</div></div>`;
+    }
+    if (h.status === 'failed') {
+      return `<div class="bc-anchor bad"><span class="ic">!</span><div>上次全链锚定失败，可重新发起（永恒之链页底部）</div></div>`;
+    }
+    return '';
   }
 
   /** 钱包区域：未连接给按钮；已连接给地址与链状态 */

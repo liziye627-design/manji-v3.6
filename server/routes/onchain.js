@@ -93,6 +93,25 @@ export const routes = {
   'GET /api/chain/onchain/status': async (ctx) => {
     const mode = onchainMode();
     audit(ctx.user.id, 'onchain-status', 'chain', 'global', mode);
+    // 头部锚定状态（公开事实）：锚定 = 这条本地链截至某高度的全部历史被 BOT Chain 固定，
+    // 即使本应用数据库消失或被改写，任何人仍可凭主网锚点复原并证伪——这是只有公共链能给的一层
+    let headAnchor = null;
+    if (mode !== 'off') {
+      try {
+        const home = currentHome(ctx.user);
+        const head = headRowOf(home.id);
+        if (head) {
+          headAnchor = {
+            status: head.status,
+            localHeight: head.local_height,
+            txHash: head.tx_hash,
+            explorerUrl: explorerTxUrl(head.tx_hash),
+          };
+        }
+      } catch {
+        // 没有当前家（如已解除关联）：只报告全局状态，头部锚定一栏为空
+      }
+    }
     return {
       status: 200,
       data: {
@@ -106,6 +125,7 @@ export const routes = {
           // v2+ 合约开放 seal 写权限：页面可让用户连接自己的钱包直接签名上链（C 端主网交互）
           walletDirect: mode === 'off' ? null : await walletDirectSupported(),
           chainSealCount: mode === 'off' ? null : await cachedChainSealCount(),
+          headAnchor,
           queue: queueSummary(),
           privacyNote: PRIVACY_NOTE,
         },

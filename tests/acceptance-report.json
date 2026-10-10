@@ -1,6 +1,6 @@
 {
-  "ranAt": "2026-10-10T11:09:25.038Z",
-  "base": "http://127.0.0.1:4363",
+  "ranAt": "2026-10-10T14:10:54.452Z",
+  "base": "http://127.0.0.1:4302",
   "passed": 101,
   "total": 101,
   "items": [
@@ -386,7 +386,7 @@
       "id": "M32d",
       "name": "获得授权后作品任务可建立",
       "pass": true,
-      "detail": "status=201 {\"workId\":\"wrk_lbSWXUUDFnNJ\",\"status\":\"queued\"}"
+      "detail": "status=201 {\"workId\":\"wrk_DM2EC9wKf9sX\",\"status\":\"queued\"}"
     },
     {
       "id": "M33",

@@ -873,6 +873,18 @@ button:focus-visible, a:focus-visible, .tab:focus-visible, input:focus-visible, 
   box-shadow: var(--shadow-soft); padding: 12px 14px; margin-bottom: 14px;
 }
 .bc-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bc-anchor {
+  display: flex; align-items: flex-start; gap: 9px; margin-top: 10px; padding: 9px 11px;
+  border-radius: 10px; font-size: 12px; line-height: 1.65;
+  background: #E7F2E2; color: #3D6B31;
+}
+.bc-anchor .ic { font-weight: 800; font-size: 13px; line-height: 1.5; }
+.bc-anchor .mono-link { color: #3D6B31; }
+.bc-anchor.ok b { font-weight: 700; }
+.bc-anchor.bad { background: #F9E0DC; color: #A25043; }
+.bc-anchor:not(.ok):not(.bad) { background: #F6E7CB; color: #8A6420; }
+.bc-why { border-top: 1px dashed #EAD9B8; padding-top: 8px; }
+.bc-why b { color: #6B5420; }
 .bc-title { font-size: 16px; }
 .bc-value { margin: 8px 0 0; font-size: 14px; line-height: 1.8; color: #6B5420; }
 .bc-meta { margin: 6px 0 0 2px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
