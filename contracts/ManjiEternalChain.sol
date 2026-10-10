@@ -10,8 +10,11 @@ pragma solidity ^0.8.24;
  *    以 32 字节（bytes32）传入本合约。正文、照片、昵称、钱包、关系状态一律不上链；
  * 2. salt 是 32 字节密码学随机数，只保存在链下（双方各自的存证凭证里）。
  *    外部观察者即使拿到全部链上数据，也无法枚举、比对出任何正文；
- * 3. 交易由统一「代提交账户（relayer）」发送，而不是由成员的长期钱包发送——
- *    成员地址不出现在交易发起者、存储、事件或输入参数的任何位置；
+ * 3. 提交路径二选一，由成员在应用里自愿选择：
+ *    a) 默认：由统一「代提交账户（relayer）」发送——成员地址不出现在交易的任何位置；
+ *    b) 钱包直发（v2 开放）：成员用自己的钱包在页面里直接签名发送 seal 交易——
+ *       此时该钱包地址会公开出现在交易发起者里。这是自我托管签名的固有属性，
+ *       也是「这一笔是我亲手刻上去」的证明；承诺内容仍然只是哈希。
  * 4. 双方同意在链下核验：共同约定须两人都点过「我也愿意」（应用内强制），
  *    日记由作者本人发起。本合约只登记承诺，不复核、也无法复核同意过程——
  *    这是诚实的信任边界：合约证明「某承诺在时间 T 已被登记」，
@@ -25,19 +28,22 @@ pragma solidity ^0.8.24;
  * 合约没有任何修改、删除、暂停或升级已登记数据的函数；没有代理、没有 owner 后台写权限。
  * owner（部署者，构造时固定、不可转让）唯一的操作是更换 relayer；
  * relayer 私钥最坏情况下的影响也只是登记无效哈希（垃圾数据），无法触碰任何已登记承诺。
+ * v2 起 seal/sealBatch 对所有人开放（公共存证账本：任何钱包都能登记一个哈希，
+ * 重复登记被 AlreadySealed 拒绝；垃圾哈希与真实承诺在链上不可区分，这正是匿名性的来源），
+ * anchorHead 仍仅限 owner/relayer——头部槽位是稀缺资源，开放的写权限只给 append-only 的承诺。
  * 合约不接收任何转账。
  */
 contract ManjiEternalChain {
     // ---------- 常量 ----------
     string public constant APP = "manji-eternal-chain";
-    string public constant VERSION = "1";
+    string public constant VERSION = "2";
     /// @notice 单笔交易最多登记的承诺数量（限制单笔 Gas，也避免长数组扰乱浏览器展示）
     uint256 public constant MAX_BATCH = 256;
 
     // ---------- 存储 ----------
     /// @notice 部署者：唯一权限是更换 relayer。构造时固定，不可转让（更少的权力 = 更可预测）
     address public immutable owner;
-    /// @notice 统一代提交账户：代替两位成员发送登记交易（可以是部署者自己）
+    /// @notice 统一代提交账户：默认代替两位成员发送登记交易（隐私路径），也是唯一可锚定头部的账户之一（可以是部署者自己）
     address public relayer;
 
     /// 一条承诺的登记回执：出现在链上的序号与时间
@@ -99,19 +105,21 @@ contract ManjiEternalChain {
 
     /**
      * @notice 登记一条内容承诺（一次日记或一次约定）。调用前应用已链下核验双方同意。
+     *         v2 起对任何钱包开放：应用默认经 relayer 代发（成员地址不上链），
+     *         成员也可在页面里用自己的钱包直接签名发送（该地址将公开出现在交易发起者里）。
      * @param commitment SHA-256("manji-anchor-v1"‖canonicalJSON(内容)‖salt) 的 32 字节值
      * @return index 全链登记序号（0 起）
      */
-    function seal(bytes32 commitment) external onlyWriter returns (uint64 index) {
+    function seal(bytes32 commitment) external returns (uint64 index) {
         index = _sealOne(commitment);
     }
 
     /**
      * @notice 批量登记承诺（同一交易内完成，节省手续费）。整批原子：任一条重复或为零值则全部回滚，
-     *         调用方需先在链下去重。
+     *         调用方需先在链下去重。与 seal 一样对任何钱包开放（v2）。
      * @return firstIndex 本批第一条的登记序号（批内第 i 条 = firstIndex + i）
      */
-    function sealBatch(bytes32[] calldata commitments) external onlyWriter returns (uint64 firstIndex) {
+    function sealBatch(bytes32[] calldata commitments) external returns (uint64 firstIndex) {
         uint256 n = commitments.length;
         if (n == 0) revert EmptyBatch();
         if (n > MAX_BATCH) revert BatchTooLarge(n, MAX_BATCH);

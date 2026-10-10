@@ -62,4 +62,19 @@ export const config = {
     relayerKey: process.env.ONCHAIN_RELAYER_KEY || '',
     explorer: process.env.ONCHAIN_EXPLORER || (Number(process.env.ONCHAIN_CHAIN_ID) === 677 ? 'https://scan.botchain.ai' : 'https://scan.bohr.life'),
   },
+  // v3.6 Agent OS（BOT Chain 官方托管 API）：小狗的链上身份（ERC-8004 NFT）+ 托管钱包。
+  // AGENTOS_API_KEY（ak_ 前缀，只显示一次）只放 .env.local；未配置（空）时功能整体 off，
+  // 所有 agentos 接口如实返回未配置，主流程零影响。key 绝不写日志、绝不进入任何 API 响应。
+  agentos: {
+    apiKey: process.env.AGENTOS_API_KEY || '',
+    walletApi: process.env.AGENTOS_WALLET_API || 'https://wallet-api.botchain.ai',
+    identityApi: process.env.AGENTOS_IDENTITY_API || 'https://identity-api.botchain.ai',
+    chainId: int(process.env.AGENTOS_CHAIN_ID, 677),
+  },
+  // v3.6.3 链上小狗身份（自托管 ManjiPuppyIdentity 合约）：官方 Agent OS 托管 API 未获批 key 的
+  // 自部署替代——ERC-8004 风格（ownerOf/getAgentWallet/tokenURI），铸造由成员钱包直接签名。
+  // 只需合约地址，RPC/链/浏览器复用 onchain 配置；未配置时功能 off，主流程零影响。
+  puppyIdentity: {
+    contract: (process.env.PUPPY_IDENTITY_CONTRACT || '').toLowerCase(),
+  },
 };

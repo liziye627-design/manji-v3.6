@@ -333,6 +333,38 @@ CREATE TABLE IF NOT EXISTS public_head_anchors (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+-- v3.6 Agent OS：每个家的小狗在 BOT Chain 的链上身份台账（Agent Wallet + ERC-8004 Identity NFT）。
+-- 幂等键持久化在行内：分步注册中途失败后重试，官方侧同键重放，绝不产生第二个钱包/身份。
+CREATE TABLE IF NOT EXISTS agentos_identities (
+  home_id TEXT PRIMARY KEY,             -- 一个家一条：小狗的链上身份
+  external_agent_id TEXT NOT NULL,      -- 例：manji-<home_id>-puppy
+  idem_wallet TEXT NOT NULL,            -- 建钱包的幂等键（UUID）
+  idem_identity TEXT NOT NULL,          -- 注册身份的幂等键（UUID）
+  wallet_id TEXT,
+  account_address TEXT,                 -- 小狗钱包收款地址（打赏发这里）
+  owner_address TEXT,                   -- 控制地址（身份注册需要；不是收款地址）
+  wallet_status TEXT NOT NULL DEFAULT 'PREDICTED',  -- PREDICTED → DEPLOYING → DEPLOYED
+  identity_id TEXT,
+  agent_token_id INTEGER,               -- ERC-8004 NFT tokenId（REGISTERED 后可查）
+  identity_status TEXT NOT NULL DEFAULT 'PENDING',  -- PENDING → GAS_FUNDING → REGISTERING → METADATA_PENDING → REGISTERED
+  registered_at TEXT,
+  error TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+-- v3.6 Agent OS：小狗打赏台账。amount_bot 存原始 BOT 金额字符串——wei 级 18 位精度接近 2^63，
+-- node:sqlite INTEGER 是 8 字节有符号，不存 wei 整数；wei 只在 tip 响应里以十进制字符串出现。
+CREATE TABLE IF NOT EXISTS agentos_tips (
+  id TEXT PRIMARY KEY,
+  home_id TEXT NOT NULL,
+  from_user_id TEXT NOT NULL,
+  amount_bot TEXT NOT NULL,             -- 用户输入的原始 BOT 金额（字符串，原样落库）
+  tx_hash TEXT,
+  status TEXT NOT NULL CHECK (status IN ('pending','submitted','confirmed','failed')),
+  error TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
 CREATE INDEX IF NOT EXISTS idx_chain_blocks_home ON chain_blocks(home_id, height);
 CREATE INDEX IF NOT EXISTS idx_chain_anchors_record ON chain_anchors(record_type, record_id);
 CREATE INDEX IF NOT EXISTS idx_contrib_memory ON contributions(memory_id);
@@ -341,11 +373,25 @@ CREATE INDEX IF NOT EXISTS idx_containers_home ON memory_containers(home_id);
 CREATE INDEX IF NOT EXISTS idx_placements_home ON placements(home_id, layer, status);
 CREATE INDEX IF NOT EXISTS idx_media_owner ON media_assets(owner_id, status);
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_agentos_tips_home ON agentos_tips(home_id, created_at);
 `);
 
 // 旧库迁移：补管理员标记列（新库已含）
 try {
   db.prepare('ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0').run();
+} catch {
+  // 列已存在
+}
+
+// 旧库迁移：v3.6.3 小狗身份改自链铸造（ManjiPuppyIdentity）——补铸造名字与铸造交易两列。
+// 旧官方 API 列（wallet_id/idem_*/identity_id 等）保留不删：行数据可追溯，代码不再写入。
+try {
+  db.prepare('ALTER TABLE agentos_identities ADD COLUMN puppy_name TEXT').run();
+} catch {
+  // 列已存在
+}
+try {
+  db.prepare('ALTER TABLE agentos_identities ADD COLUMN mint_tx TEXT').run();
 } catch {
   // 列已存在
 }

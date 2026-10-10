@@ -30,6 +30,7 @@ export const SELECTORS = {
   anchorHead: selectorOf('anchorHead(bytes16,bytes32,uint64)'),
   headOf: selectorOf('headOf(bytes16)'),
   sealCount: selectorOf('sealCount()'),
+  version: selectorOf('VERSION()'),
 };
 export const SEALED_EVENT_TOPIC = '0x' + keccak256('Sealed(bytes32,uint64,uint64)');
 
@@ -133,6 +134,11 @@ export function explorerTxUrl(txHash) {
   return config.onchain.explorer && txHash ? `${config.onchain.explorer.replace(/\/$/, '')}/tx/${txHash}` : null;
 }
 
+/** 浏览器根地址（页面用它拼 /address/合约、/tx/交易 链接） */
+export function explorerBase() {
+  return config.onchain.explorer ? config.onchain.explorer.replace(/\/$/, '') : null;
+}
+
 // ---------- JSON-RPC（零 npm 依赖；Node 22+ 自带 fetch） ----------
 let rpcSeq = 1;
 
@@ -206,9 +212,135 @@ export async function chainSealCount() {
   return raw === '0x' ? 0 : Number(BigInt(raw));
 }
 
+// ---------- 公开核验门户（免登录）：任何人可查这条链上的慢记存证 ----------
+/** 公开门户首页信息：只有本来就公开的链上事实，无任何应用内部数据 */
+export async function publicChainInfo() {
+  const mode = onchainMode();
+  if (mode === 'off') return { configured: false };
+  return {
+    configured: true,
+    contractName: CONTRACT_NAME,
+    chainId: config.onchain.chainId,
+    contract: config.onchain.contract,
+    explorer: explorerBase(),
+    walletDirect: await walletDirectSupported(),
+    sealCount: await cachedChainSealCount(),
+  };
+}
+
+/**
+ * 公开查询一个 64 位十六进制值：先按交易哈希查回执（命中则解析 Sealed 事件里登记的承诺），
+ * 查不到再按承诺哈希做 sealOf。两条路都是只读 eth_call/回执查询，任何人可独立复现。
+ */
+export async function publicLookup(hashHex64) {
+  const receipt = await rpc('eth_getTransactionReceipt', ['0x' + hashHex64]).catch(() => null);
+  const explorerUrl = explorerTxUrl(hashHex64);
+  if (receipt) {
+    const seals = [];
+    for (const log of receipt.logs || []) {
+      if ((log.address || '').toLowerCase() !== config.onchain.contract) continue;
+      if (!log.topics || log.topics[0] !== SEALED_EVENT_TOPIC) continue;
+      // Sealed(bytes32 indexed commitment, uint64 index, uint64 sealedAt)
+      const words = (log.data || '0x').replace(/^0x/, '').match(/.{64}/g) || [];
+      const index = words[0] ? Number(BigInt('0x' + words[0])) : null;
+      const sealedAt = words[1] ? Number(BigInt('0x' + words[1])) : null;
+      seals.push({
+        commitment: log.topics[1].replace(/^0x/, '').toLowerCase(),
+        index,
+        sealedAtIso: sealedAt ? new Date(sealedAt * 1000).toISOString() : null,
+      });
+    }
+    return {
+      kind: 'tx',
+      tx: {
+        hash: hashHex64,
+        explorerUrl,
+        to: (receipt.to || '').toLowerCase(),
+        isOurContract: (receipt.to || '').toLowerCase() === config.onchain.contract,
+        status: receipt.status === '0x1',
+        blockNumber: receipt.blockNumber ? Number(BigInt(receipt.blockNumber)) : null,
+        from: (receipt.from || '').toLowerCase(),
+        seals,
+      },
+    };
+  }
+  const onchain = await verifyCommitmentOnChain(hashHex64);
+  return {
+    kind: 'commitment',
+    commitment: {
+      hash: hashHex64,
+      found: onchain.found,
+      index: onchain.index,
+      sealedAtIso: onchain.sealedAtIso,
+    },
+  };
+}
+
+// ---------- 合约版本探测（v2 起 seal/sealBatch 对任何钱包开放，页面可引导用户钱包直发） ----------
+let cachedVersion = undefined; // undefined=尚未成功；成功后缓存，链上 VERSION 是常量不再变化
+
+/** ABI string 返回值解码：word0=偏移(0x20) word1=字节长度 其后为 utf-8 数据 */
+function parseStringResult(resultHex) {
+  const w = wordsOf(resultHex || '0x');
+  if (w.length < 3) return null;
+  const len = Number(BigInt('0x' + w[1]));
+  if (!len || len > 64) return null;
+  const hex = w.slice(2).join('').slice(0, len * 2);
+  try {
+    return Buffer.from(hex, 'hex').toString('utf8');
+  } catch {
+    return null;
+  }
+}
+
+/** 问链上 VERSION()（带 3 秒预算：状态接口不该被慢 RPC 拖住）；失败返回 null，下次再试 */
+export async function contractVersion() {
+  if (cachedVersion !== undefined) return cachedVersion;
+  try {
+    const raw = await Promise.race([
+      ethCall('0x' + SELECTORS.version),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('VERSION() 查询超时')), 3000)),
+    ]);
+    const v = parseStringResult(raw);
+    if (v) cachedVersion = v;
+    return v || null;
+  } catch {
+    return null;
+  }
+}
+
+/** 页面钱包直发是否可用：v2+ 合约开放 seal 写权限；旧合约（v1 只有 owner/relayer 可写）返回 false；探测失败返回 null（未知） */
+export async function walletDirectSupported() {
+  const v = await contractVersion();
+  if (v === null) return null;
+  return Number(v) >= 2;
+}
+
 // ---------- 承诺提交队列 ----------
 export function sealRowOf(anchorId) {
   return db.prepare('SELECT * FROM public_seals WHERE id = ?').get(anchorId);
+}
+
+/** 某条本地锚定的主网登记状态（挂在约定/日记载荷上，供列表卡片显示主网徽章） */
+export function mainnetSealOfAnchor(anchorId) {
+  const row = db.prepare('SELECT status, seal_index FROM public_seals WHERE id = ?').get(anchorId);
+  return row ? { status: row.status, sealIndex: row.seal_index } : null;
+}
+
+// 主网登记总数（面板展示用）：60 秒缓存；查询带 3 秒预算（首次慢 RPC 不拖住状态接口），失败沿用上次成功值
+let sealCountCache = { value: null, at: 0 };
+export async function cachedChainSealCount() {
+  if (sealCountCache.value !== null && Date.now() - sealCountCache.at < 60_000) return sealCountCache.value;
+  try {
+    const n = await Promise.race([
+      chainSealCount(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('sealCount 查询超时')), 3000)),
+    ]);
+    sealCountCache = { value: n, at: Date.now() };
+    return n;
+  } catch {
+    return sealCountCache.value;
+  }
 }
 
 export function sealsOfHome(homeId) {

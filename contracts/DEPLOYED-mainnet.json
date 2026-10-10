@@ -1,55 +1,107 @@
 {
   "app": "manji",
   "contract": "ManjiEternalChain",
+  "contractVersion": "2",
   "network": "BOT Chain Mainnet",
   "chainId": 677,
   "rpc": "https://rpc.botchain.ai",
   "explorer": "https://scan.botchain.ai",
-  "address": "0xDf6d55959BD6abCdE5750D800F782637115b672D",
+  "address": "0x59551d78e15ee25e512c678bfd4b6781f065f560",
   "deployer": "0x4844F22482B0e08dc9b44d153a723863F576b178",
-  "deployedAt": "2026-10-08T04:30:00.000Z",
+  "deployTx": "0x502c6f306d86265c462d2f73ace29f329b157c1aeaaa4d83bda2706e048ab1c9",
+  "blockNumber": 26176256,
+  "gasUsed": 757475,
+  "deployedAt": "2026-10-10T00:00:00.000Z",
   "compiler": {
     "version": "0.8.24",
     "evmVersion": "paris",
-    "optimizer": { "enabled": true, "runs": 200 }
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    }
   },
+  "changesFromV1": "v2 把 seal/sealBatch 的写入权限开放给任何钱包（公共存证账本）：页面里连接的钱包可以直接签名发送登记交易（C 端主网交互）；anchorHead 仍仅限 owner/relayer（头部槽位防恶意锚定）。所有函数选择器与 v1 完全一致。",
   "roles": {
     "owner": "0x4844F22482B0e08dc9b44d153a723863F576b178（链上 owner() 已核验）",
     "relayer": "0x4844F22482B0e08dc9b44d153a723863F576b178（统一代提交账户，链上 relayer() 已核验；私钥只存本机 .env.local，绝不入仓库与交付包）"
   },
   "mainnetVerification": [
     {
-      "step": "eth_getCode 读到 3361 字节合约代码（与首次部署的编译产物一致）；owner()/relayer() 均为部署钱包，sealCount() 从 0 起算",
-      "tx": "0x（本合约为重新部署，创建交易哈希见浏览器地址页）"
+      "step": "部署交易已确认（Success），eth_getCode 读到 3159 字节合约代码；VERSION()=\"2\"、owner()/relayer() 均为部署钱包、sealCount()=0",
+      "tx": "0x502c6f306d86265c462d2f73ace29f329b157c1aeaaa4d83bda2706e048ab1c9"
     },
     {
-      "step": "应用端到端实测（2026-10-08）：约定+日记两条承诺经 sealBatch 一笔交易登记（index=0、1），sealOf 核验 found=true；本地永恒之链头部（高度 2）anchorHead 锚定成功并确认",
-      "tx": "0xe23664b7a32b1a07b1829c041d4379ad1a9708dee7cd57b2b93f03c751713be3",
-      "headAnchorTx": "0x28b9d50bc14ace58f80817e1330490bde17fe225d1ad9c2ff062e90f00b49770"
+      "step": "应用端到端实测（2026-10-10，relayer 路径）：约定+日记两条承诺经 sealBatch 一笔交易登记（index=0、1），sealOf 核验 found=true；本地永恒之链头部（高度 2）anchorHead 锚定成功并确认",
+      "tx": "0x7b2dfc064c80bc73e97a7be168bb342fc7d2c5518cef5cd56333f84e1e3ffc46",
+      "headAnchorTx": "0x2cfe6dfbf3e5a0ede1032b15e6cf6d1fac99ef456c9a65b70a88ad366de35354"
+    },
+    {
+      "step": "权限开放验证（2026-10-10，C 端钱包路径）：随机生成的普通钱包 0xFB578a334Eec08ccBe82d449B41DE4bB7631269A（非 owner/relayer）直接调用 seal 成功（gasUsed 73565），sealOf 核验 found=true index=2——任何钱包都可以在页面里直接签名登记承诺",
+      "tx": "0x19f0035b03a29fd839ec31dcad3a559bfd72bd77877cf55fe6dc3340aaa329f2",
+      "gasFundingTx": "0x6bf68ab99073e4d9b6d9cf6487ab462d6af6735212670e8747c7a639ae73e436"
     }
   ],
   "chainIdDerivation": "anchorHead 的 localChainId(bytes16) = SHA-256(应用链编号 base64url 字符串) 前 16 字节；导出文件里的 chainId 按同一规则即可复算",
   "note": "本文件不含任何私钥。合约没有升级/暂停/删除数据的函数；owner 唯一后台操作是 setRelayer 轮换代提交账户。",
   "previousDeployment": {
-    "address": "0x9757b6fd786fb77545a288e98fc06a6c04bfc627",
-    "deployTx": "0x7961f1650163b75d52448235912acbb7e47a3e29b5d5e9253895527fb2448a4b",
-    "blockNumber": 25925515,
-    "gasUsed": 800625,
-    "deployedAt": "2026-10-08T03:02:32.289Z",
-    "status": "已被上方新地址取代（应用运行时地址只由 .env.local 的 ONCHAIN_CONTRACT 决定）；旧合约链上数据仍可独立核验",
+    "contractVersion": "1",
+    "address": "0xDf6d55959BD6abCdE5750D800F782637115b672D",
+    "deployedAt": "2026-10-08T04:30:00.000Z",
+    "status": "已被 v2 地址取代（应用运行时地址只由 .env.local 的 ONCHAIN_CONTRACT 决定）；旧合约链上数据仍可独立核验",
     "mainnetVerification": [
       {
-        "step": "部署交易在浏览器确认为 Success，eth_getCode 读到 3361 字节合约代码",
-        "tx": "0x7961f1650163b75d52448235912acbb7e47a3e29b5d5e9253895527fb2448a4b"
+        "step": "eth_getCode 读到 3361 字节合约代码（与首次部署的编译产物一致）；owner()/relayer() 均为部署钱包，sealCount() 从 0 起算",
+        "tx": "0x（本合约为重新部署，创建交易哈希见浏览器地址页）"
       },
       {
-        "step": "seal(0x1111…11) 测试指纹登记成功，gas 90731，sealOf 核验 found=true index=0",
-        "tx": "0x1f11efed9e0958e200cfc06fc811cf297319ba8c89527e4a01bace8703cd615e"
+        "step": "应用端到端实测（2026-10-08）：约定+日记两条承诺经 sealBatch 一笔交易登记（index=0、1），sealOf 核验 found=true；本地永恒之链头部（高度 2）anchorHead 锚定成功并确认",
+        "tx": "0xe23664b7a32b1a07b1829c041d4379ad1a9708dee7cd57b2b93f03c751713be3",
+        "headAnchorTx": "0x28b9d50bc14ace58f80817e1330490bde17fe225d1ad9c2ff062e90f00b49770"
+      }
+    ],
+    "previousDeployment": {
+      "address": "0x9757b6fd786fb77545a288e98fc06a6c04bfc627",
+      "deployTx": "0x7961f1650163b75d52448235912acbb7e47a3e29b5d5e9253895527fb2448a4b",
+      "blockNumber": 25925515,
+      "gasUsed": 800625,
+      "deployedAt": "2026-10-08T03:02:32.289Z",
+      "status": "已被取代；旧合约链上数据仍可独立核验",
+      "mainnetVerification": [
+        {
+          "step": "部署交易在浏览器确认为 Success，eth_getCode 读到 3361 字节合约代码",
+          "tx": "0x7961f1650163b75d52448235912acbb7e47a3e29b5d5e9253895527fb2448a4b"
+        },
+        {
+          "step": "seal(0x1111…11) 测试指纹登记成功，gas 90731，sealOf 核验 found=true index=0",
+          "tx": "0x1f11efed9e0958e200cfc06fc811cf297319ba8c89527e4a01bace8703cd615e"
+        },
+        {
+          "step": "应用端到端实测：约定+日记两条承诺经 sealBatch 一笔交易登记（index=5、6），sealOf 核验通过；本地永恒之链头部（高度 2）anchorHead 锚定成功并确认",
+          "tx": "0x2402891f6264c32fc35d65cd23e4283f0d25f5f9d8dbe470ccf055efe5f57040",
+          "headAnchorTx": "0xba19388f8f97b1bad8923abea18657b8c78b00d50084e46fbca2989e1cec1dd8"
+        }
+      ]
+    }
+  },
+  "puppyIdentity": {
+    "contract": "ManjiPuppyIdentity",
+    "network": "BOT Chain Mainnet",
+    "chainId": 677,
+    "address": "0x9acf5fb43b544d4a62ee5b66d78e1d79c87466d5",
+    "deployer": "0x4844F22482B0e08dc9b44d153a723863F576b178",
+    "deployTx": "0x6f38e1f5f6cdb64fce666d8e88cc3ade696348547d888ef5451282374293b8cc",
+    "blockNumber": 26192525,
+    "gasUsed": 1548048,
+    "deployedAt": "2026-10-10T00:00:00.000Z",
+    "note": "ERC-8004 风格自托管小狗身份（不可转让 NFT；名字上链、链上生日、存钱罐地址、data-URI 身份文件）。铸造由用户钱包直接签名。官方 Agent OS 托管 API 未获批 key，此合约为自部署替代，核心语义一致（ownerOf/getAgentWallet/tokenURI）。",
+    "mainnetVerification": [
+      {
+        "step": "部署交易 Success，eth_getCode 6919 字节；name()=Manji Puppy Identity / symbol()=MPUPPY / totalSupply()=0",
+        "tx": "0x6f38e1f5f6cdb64fce666d8e88cc3ade696348547d888ef5451282374293b8cc"
       },
       {
-        "step": "应用端到端实测：约定+日记两条承诺经 sealBatch 一笔交易登记（index=5、6），sealOf 核验通过；本地永恒之链头部（高度 2）anchorHead 锚定成功并确认",
-        "tx": "0x2402891f6264c32fc35d65cd23e4283f0d25f5f9d8dbe470ccf055efe5f57040",
-        "headAnchorTx": "0xba19388f8f97b1bad8923abea18657b8c78b00d50084e46fbca2989e1cec1dd8"
+        "step": "真实铸造（2026-10-10）：mint(\"慢记小狗·链上第一名\", 存钱罐) 成功，tokenId=0，gasUsed 137520；ownerOf(0)/nameOf(0)/getAgentWallet(0)/tokenURI(0) 链上复核全部一致；tokenURI 为自包含 data-URI JSON（含爪印 SVG）",
+        "tx": "0x9dc5fdd7d64567d52773958ef48b842e9961d22ef8a5511dbeb9a2065e320beb"
       }
     ]
   }

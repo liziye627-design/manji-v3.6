@@ -2,6 +2,7 @@
 import { dogSVG, objectIcon, tabIcon, bellIcon, toolIcon, dogPoseImg } from './assets/art.js';
 import { mountRoom } from './room/room.js';
 import { mountPuppyHero } from './puppy/puppy3d.js';
+import * as botwallet from './wallet.js';
 
 // ================= 工具 =================
 const $app = document.getElementById('app');
@@ -316,6 +317,7 @@ function topbar({ title = '慢记', en = 'OUR SHARED HOME' } = {}) {
   return `<header class="topbar">
     <button class="icon-btn" id="btn-notif" aria-label="通知">${bellIcon()}<span class="dot" style="display:none"></span></button>
     <div class="brand"><div class="name">${esc(title)}</div><div class="en">${esc(en)}</div></div>
+    ${topbarChainChipHtml()}
     <div class="avatars">
       ${members
         .slice(0, 2)
@@ -323,6 +325,56 @@ function topbar({ title = '慢记', en = 'OUR SHARED HOME' } = {}) {
         .join('')}
     </div>
   </header>`;
+}
+
+// ================= v3.6.4 BOT Chain 全局可见性：顶栏常驻徽章 + 首页链上足迹条 =================
+// 数据 60 秒缓存（两个只读接口并行，任一失败静默降级）；徽章先渲染、数字异步补上。
+const chainBadgeState = { at: 0, data: null };
+async function loadChainBadge() {
+  if (chainBadgeState.data && Date.now() - chainBadgeState.at < 60_000) return chainBadgeState.data;
+  try {
+    const [oc, ag] = await Promise.all([
+      api('GET', '/api/chain/onchain/status').catch(() => null),
+      api('GET', '/api/agentos/status').catch(() => null),
+    ]);
+    const data = {
+      sealCount: oc && typeof oc.chainSealCount === 'number' ? oc.chainSealCount : null, // 主网合约登记总数
+      homeSealed: oc && oc.queue ? oc.queue.confirmed || 0 : 0,                          // 这个家已上主网的承诺数
+      puppyTokenId: ag && ag.puppy && ag.puppy.agentTokenId != null ? ag.puppy.agentTokenId : null,
+      puppyName: ag && ag.puppy && ag.puppy.name ? ag.puppy.name : null,
+    };
+    chainBadgeState.data = data;
+    chainBadgeState.at = Date.now();
+    return data;
+  } catch {
+    return chainBadgeState.data;
+  }
+}
+
+/** 顶栏常驻的 BOT Chain 入口（数字异步填充，所有 .tc-count 一并更新） */
+function topbarChainChipHtml() {
+  return `<a class="topbar-chain" href="#/chain" title="永恒之链 · BOT Chain 主网存证（链 677）">⛓ BOT Chain<b class="tc-count" style="display:none"></b></a>`;
+}
+
+function updateChainChip() {
+  loadChainBadge()
+    .then((d) => {
+      if (!d) return;
+      for (const el of document.querySelectorAll('.tc-count')) {
+        const label = d.sealCount != null ? String(d.sealCount) : '';
+        el.style.display = label ? '' : 'none';
+        el.textContent = label;
+      }
+      const strip = document.getElementById('chain-strip');
+      if (strip) {
+        const counts = [];
+        if (d.homeSealed > 0) counts.push(`<b>${d.homeSealed}</b> 条承诺已刻上 BOT 主网`);
+        if (d.puppyTokenId != null) counts.push(`${esc(d.puppyName || '小狗')} 有链上身份 <b>#${d.puppyTokenId}</b>`);
+        strip.querySelector('.cs-counts').innerHTML =
+          counts.length > 0 ? counts.join(' · ') : '把值得永远记住的一刻，刻上 BOT Chain 主网（链 677）';
+      }
+    })
+    .catch(() => {});
 }
 
 /** 站内"减少动画"偏好落到根节点，与系统 prefers-reduced-motion 叠加生效（B12） */
@@ -338,6 +390,7 @@ async function route() {
   window.scrollTo(0, 0);
   try {
     if (hash.startsWith('#/welcome')) return viewWelcome();
+    if (hash.startsWith('#/verify')) return viewVerify(); // BOT Chain 公开核验门户：免登录
     if (hash.startsWith('#/login') || hash.startsWith('#/register')) return viewAuth(hash.startsWith('#/register'));
     // 邀请页对未登录用户开放：先看见邀请内容，注册/登录后回到这里接受（B03）
     if (hash.startsWith('#/invite/accept')) {
@@ -388,6 +441,7 @@ function bindTopbar() {
     btn.addEventListener('click', openNotifications);
     refreshNotifDot();
   }
+  updateChainChip(); // 顶栏 BOT Chain 徽章与首页链上足迹条的数字填充
   const add = document.getElementById('tab-add');
   if (add) add.addEventListener('click', openQuickCreate);
 }
@@ -411,6 +465,7 @@ function viewWelcome() {
       <p class="welcome-eyebrow"><span></span> 两个人，一点一滴</p>
       <h1 id="welcome-heading">把日子，<br>慢慢过成<span class="welcome-us">我们<svg viewBox="0 0 100 10" fill="none" aria-hidden="true"><path d="M3 6c25-5 54-5 94-2M11 9c21-3 49-4 75-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>。</h1>
       <p class="welcome-description">收藏平凡的小事，养一只黏人的小狗。<br>让每个「今天」，都有地方安放。</p>
+      <p class="welcome-herochain">⛓ 约定与日记可镌刻上 <b>BOT Chain 主网</b>（链 677）· 小狗可铸链上身份 · <a href="#/verify">免登录核验存证 →</a></p>
     </section>
 
     <figure class="welcome-illustration" aria-label="一只小狗坐在温柔的拱窗前，等待你们回家">
@@ -427,6 +482,18 @@ function viewWelcome() {
       </div>
       <figcaption><span></span> 一间小屋 · 两个人 · 许多以后 <span></span></figcaption>
     </figure>
+
+    <section class="welcome-eternal" aria-label="永恒之链与 BOT Chain 主网存证">
+      <div class="we-chain" aria-hidden="true"><svg viewBox="0 0 96 24" fill="none"><path d="M10 12c0-3.6 2.9-6.5 6.5-6.5H26c3.6 0 6.5 2.9 6.5 6.5s-2.9 6.5-6.5 6.5h-9.5C12.9 18.5 10 15.6 10 12Z" stroke="currentColor" stroke-width="1.6"/><path d="M35.5 12c0-3.6 2.9-6.5 6.5-6.5h9.5c3.6 0 6.5 2.9 6.5 6.5s-2.9 6.5-6.5 6.5H42c-3.6 0-6.5-2.9-6.5-6.5Z" stroke="currentColor" stroke-width="1.6"/><path d="M61 12c0-3.6 2.9-6.5 6.5-6.5H77c3.6 0 6.5 2.9 6.5 6.5s-2.9 6.5-6.5 6.5h-9.5C63.9 18.5 61 15.6 61 12Z" stroke="currentColor" stroke-width="1.6"/></svg></div>
+      <h2 class="we-title">有些话，值得永远作数</h2>
+      <p class="we-copy">约定与日记镌刻进「永恒之链」，再由<b>你们自己的钱包</b>亲手把这一刻的指纹刻上 <b>BOT Chain 主网</b>。从此它不属于任何服务器或公司——任何人，包括我们自己，都无法修改或删除。</p>
+      <div class="we-badges">
+        <span class="we-badge">⛓ BOT Chain 主网 · 链 677</span>
+        <span class="we-badge">连接钱包 · 你亲自签名</span>
+        <a class="we-badge" href="https://scan.botchain.ai" target="_blank" rel="noopener">浏览器公开可查 ↗</a>
+        <a class="we-badge" href="#/verify">免登录核验存证 →</a>
+      </div>
+    </section>
 
     <footer class="welcome-actions">
       <a class="welcome-start" href="#/register"><span>开启我们的小家</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
@@ -752,6 +819,13 @@ async function viewHome(generation = routeGeneration) {
   const objects = room.objects.map((o) => ({ slotKey: o.slotKey, templateKey: o.templateKey, memory: o.memory }));
   const keepsakes = objects.length + room.storedCount;
 
+  // 链上足迹横幅：点击进永恒之链；数字由 updateChainChip 异步填充（route 渲染后统一触发）
+  const chainStrip = document.getElementById('chain-strip');
+  if (chainStrip) {
+    chainStrip.onclick = () => { location.hash = '#/chain'; };
+    chainStrip.onkeydown = (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); location.hash = '#/chain'; } };
+  }
+
   // 通知与回顾保留独立入口，让点小狗时完整播放互动。
   const carryNotif = notifItems.find((n) => !n.read_at && n.type === 'memory-shared' && n.source_id);
   let guideItem = null;
@@ -783,6 +857,7 @@ async function viewHome(generation = routeGeneration) {
             <div class="name">我们的小屋</div>
             <div class="en">${esc(whoText)}${dayN ? ` · DAY ${dayN}` : ''}</div>
           </div>
+          ${topbarChainChipHtml()}
           <div class="avatars">
             ${(me.home?.members || []).slice(0, 2)
               .map((m, i) => `<span class="avatar ${i === 1 ? 'rose' : ''}" title="${esc(m.display_name)}">${esc(m.display_name.slice(0, 1))}</span>`)
@@ -792,6 +867,14 @@ async function viewHome(generation = routeGeneration) {
         <div id="interactive-room" class="interactive-room" aria-label="三只小狗的小屋"><div class="loading"><div class="spin"></div>正在打开小屋…</div></div>
     </div>
     <div class="home-sheet">
+      <div class="chain-strip" id="chain-strip" role="button" tabindex="0" aria-label="查看永恒之链与 BOT Chain 主网存证">
+        <div class="cs-ico" aria-hidden="true">⛓</div>
+        <div class="cs-body">
+          <div class="cs-title serif">我们的链上足迹 · BOT Chain</div>
+          <div class="cs-counts muted tiny">正在读取 BOT 主网…</div>
+        </div>
+        <span class="cs-go" aria-hidden="true">→</span>
+      </div>
       ${story ? `
       <div class="story-card">
         <div class="s-ico">${story.ico}</div>
@@ -1509,6 +1592,7 @@ async function viewMemoryDetail(memoryId) {
           <span class="author">${esc(c.authorName)}${c.mine ? '（我）' : ''}</span>
           <span class="tag ${c.visibility === 'home' ? 'rose' : 'plain'} tiny">${c.visibility === 'home' ? '已共享' : '仅自己'}</span>
           ${c.onChain ? `<a class="tag chain tiny" href="${archived && d.homeId ? `#/chain?home=${encodeURIComponent(d.homeId)}` : '#/chain'}" title="${archived ? '查看已定格的旧链' : '查看永恒之链'}">⛓ 第${c.onChain.blockHeight}块${c.onChain.isCurrentRevision ? '' : ' · 已有新版'}</a>` : ''}
+          ${archived ? '' : mainnetTagHtml(c.onChain)}
           <span style="flex:1"></span>
           ${c.mine && !archived ? `<button class="btn ghost sm" data-edit="${c.id}">编辑我的视角</button>` : ''}
         </div>
@@ -2253,6 +2337,7 @@ async function viewPromises() {
             ${p.dueDate ? `<span class="tag plain">${fmtDate(p.dueDate).slice(5)}</span>` : ''}
             <span class="tag plain">${p.scope === 'shared' ? '两个人的' : '我自己的'}</span>
             ${p.onChain ? `<a class="tag chain" href="#/chain" title="查看永恒之链">⛓ 在链上 · 第${p.onChain.blockHeight}块${p.onChain.isCurrentRevision ? '' : ' · 已有新版'}</a>` : ''}
+            ${mainnetTagHtml(p.onChain)}
           </div>
           ${p.note ? `<p class="muted tiny" style="margin-top:6px">${esc(p.note)}</p>` : ''}
           ${p.status === 'completed' && p.completedBy ? `<p class="muted tiny" style="margin-top:4px">${esc(p.completedBy)} 记下了这件事完成${p.undoNote ? `；${esc(p.undoNote)}` : ''}</p>` : ''}
@@ -3419,10 +3504,54 @@ function openAnchorModal({ type, id, snippet, shared }) {
             <div><span class="muted tiny">区块哈希</span><div class="chain-hash">${res.blockHash}</div></div>
             <div><span class="muted tiny">内容承诺</span><div class="chain-hash">${res.commitment}</div></div>
           </div>
+          <p class="muted tiny" style="margin:4px 0 10px">想让它永远作数？现在就用钱包把这个指纹刻上 <b>BOT Chain 主网</b>——从那一刻起，它不依赖任何服务器，任何人（包括我们自己）都无法修改。</p>
           <div class="btn-row"><button class="btn ghost" id="anchor-close">好</button>
-          <a class="btn primary" href="#/chain" onclick="closeModal()">看看我们的链</a></div>
+          <button class="btn primary" id="anchor-seal-mainnet">⛓ 刻上 BOT 主网</button></div>
         </div>`;
       document.getElementById('anchor-close').onclick = () => { closeModal(); route(); };
+      // 一步上链：弹窗内直接用钱包签名（无钱包/不支持时退化为去永恒之链页）
+      const sealBtn = document.getElementById('anchor-seal-mainnet');
+      sealBtn.onclick = async () => {
+        const modalEl = mask.querySelector('.modal');
+        const step = (t) => { const el = document.getElementById('seal-step'); if (el) el.textContent = t; };
+        try {
+          modalEl.innerHTML = `
+            <div class="anchor-mining">
+              <div class="mine-ring">⛓</div>
+              <h3 style="margin:14px 0 4px">正在刻上 BOT 主网…</h3>
+              <p class="muted tiny" id="seal-step">准备交易数据…</p>
+              <p class="muted tiny">在钱包弹窗里确认这笔交易（合约只收到一个承诺哈希）</p>
+            </div>`;
+          if (!botwallet.isConnected()) { step('连接钱包…'); await botwallet.connect(); }
+          step('确认 BOT 主网（链 677）…');
+          const { txHash, explorer } = await sealViaWallet(res.anchorId);
+          step('已发送，等待出块…');
+          modalEl.innerHTML = `
+            <div class="anchor-done">
+              <div class="seal">⛓</div>
+              <h3 style="margin:12px 0 2px">已刻上 BOT 主网</h3>
+              <p class="muted tiny" style="margin:0 0 8px">这一刻的指纹已由你的钱包写进 BOT Chain，等待出块确认后永久不可修改。</p>
+              <div class="chain-hash-card">
+                <div><span class="muted tiny">主网交易</span><div class="chain-hash">${txHash}</div></div>
+              </div>
+              <div class="btn-row">
+                ${explorer ? `<a class="btn gold" href="${explorer}/tx/${txHash}" target="_blank" rel="noopener">浏览器查看交易</a>` : ''}
+                <button class="btn primary" id="seal-done">好</button>
+              </div>
+            </div>`;
+          document.getElementById('seal-done').onclick = () => { closeModal(); location.hash = '#/chain'; route(); };
+          refreshNotifDot();
+        } catch (e) {
+          closeModal();
+          if (/未检测到浏览器钱包/.test(e.message)) {
+            toast('未检测到钱包插件：可去永恒之链页由服务端代提交');
+            location.hash = '#/chain';
+          } else {
+            toast(e.message);
+          }
+          route();
+        }
+      };
       refreshNotifDot();
     } catch (e) {
       clearInterval(timer);
@@ -3440,8 +3569,131 @@ const CHAIN_STATUS_TAG = {
   mismatch: { cls: 'rose', label: '与内容不一致' },
 };
 
+/** 约定/日记卡片的主网徽章：已确认显示主网序号，确认中提示等待（点击进永恒之链页） */
+function mainnetTagHtml(onChain) {
+  const m = onChain && onChain.mainnet;
+  if (!m) return '';
+  if (m.status === 'confirmed') {
+    return `<a class="tag chain ok" href="#/chain" title="这一刻的指纹已登记在 BOT Chain 主网，任何人无法修改——点击查看交易">⛓ 主网 #${m.sealIndex}</a>`;
+  }
+  if (m.status === 'submitted') {
+    return `<a class="tag chain" href="#/chain" title="交易已发上 BOT Chain 主网，等待确认">⛓ 主网确认中</a>`;
+  }
+  if (m.status === 'pending') {
+    return `<a class="tag chain" href="#/chain" title="已加入 BOT Chain 主网提交队列">⛓ 待上主网</a>`;
+  }
+  return '';
+}
+
+/**
+ * 用连接的钱包把一条承诺直接刻上 BOT 主网（镌刻弹窗与永恒之链页共用的核心一步）：
+ * 取 calldata → 确保 BOT 主网 → 钱包签名广播 → 入队并回填交易哈希。返回 {txHash, explorer}。
+ */
+async function sealViaWallet(anchorId) {
+  const cd = await api('GET', `/api/chain/onchain/seal-calldata/${encodeURIComponent(anchorId)}`);
+  if (!botwallet.isConnected()) await botwallet.connect();
+  if (!botwallet.onRightChain()) await botwallet.ensureChain();
+  const txHash = await botwallet.sendTx({ to: cd.contract, data: cd.calldata });
+  await api('POST', `/api/chain/onchain/${encodeURIComponent(anchorId)}`).catch(() => {});
+  await api('POST', `/api/chain/onchain/${encodeURIComponent(anchorId)}/bind`, { txHash });
+  return { txHash, explorer: cd.explorer };
+}
+
+// ================= BOT Chain 公开核验门户（免登录） =================
+// 任何人——包括不使用慢记的人——都能在这里向 BOT Chain 主网直接提问：
+// 一笔交易登记过哪些承诺，或一条承诺是否已被登记。这是「存证不依赖本应用」的公开承诺。
+async function viewVerify() {
+  let info = null;
+  try { info = await api('GET', '/api/public/onchain/info'); } catch { /* 未配置或链不可达 */ }
+  const c = info || {};
+  const addrUrl = c.explorer && c.contract ? `${c.explorer}/address/${c.contract}` : null;
+
+  $app.innerHTML = `
+  <main class="verify-page">
+    <header class="v-header">
+      <div class="v-brand serif">慢记 <small>MANJI</small></div>
+      <a class="v-home muted tiny" href="#/welcome">← 回首页</a>
+    </header>
+    <section class="v-hero">
+      <div class="v-chainmark" aria-hidden="true"><svg viewBox="0 0 96 24" fill="none"><path d="M10 12c0-3.6 2.9-6.5 6.5-6.5H26c3.6 0 6.5 2.9 6.5 6.5s-2.9 6.5-6.5 6.5h-9.5C12.9 18.5 10 15.6 10 12Z" stroke="currentColor" stroke-width="1.6"/><path d="M35.5 12c0-3.6 2.9-6.5 6.5-6.5h9.5c3.6 0 6.5 2.9 6.5 6.5s-2.9 6.5-6.5 6.5H42c-3.6 0-6.5-2.9-6.5-6.5Z" stroke="currentColor" stroke-width="1.6"/><path d="M61 12c0-3.6 2.9-6.5 6.5-6.5H77c3.6 0 6.5 2.9 6.5 6.5s-2.9 6.5-6.5 6.5h-9.5C63.9 18.5 61 15.6 61 12Z" stroke="currentColor" stroke-width="1.6"/></svg></div>
+      <h1 class="serif">BOT Chain 公开存证核验</h1>
+      <p class="muted">慢记把约定与日记的承诺指纹登记在 BOT Chain 主网。在这里，<b>无需登录、无需信任我们</b>——
+        输入一笔主网交易哈希，或一条承诺哈希（见「存证凭证」导出文件），直接向链提问。</p>
+    </section>
+    ${info ? `
+    <section class="v-contract card soft">
+      <div class="v-contract-row"><span class="muted tiny">合约</span>
+        ${addrUrl ? `<a class="mono-link" href="${addrUrl}" target="_blank" rel="noopener">${c.contract}</a>` : `<span class="mono-link">${c.contract}</span>`}</div>
+      <div class="v-contract-row"><span class="muted tiny">网络</span><span class="tiny">BOT Chain Mainnet · 链 ${c.chainId}</span></div>
+      <div class="v-contract-row"><span class="muted tiny">链上已登记</span><span class="tag ok tiny">${typeof c.sealCount === 'number' ? `${c.sealCount} 条承诺` : '—'}</span></div>
+      ${c.explorer ? `<div class="v-contract-row"><span class="muted tiny">浏览器</span><a class="mono-link" href="${c.explorer}" target="_blank" rel="noopener">${c.explorer.replace(/^https?:\/\//, '')}</a></div>` : ''}
+    </section>` : `<div class="form-hint">公共链核验暂不可用（未配置或链不可达）。</div>`}
+    <section class="v-lookup">
+      <div class="field"><input class="input" id="v-input" placeholder="0x… 粘贴交易哈希或承诺哈希（64 位十六进制）" autocomplete="off" spellcheck="false"></div>
+      <div id="v-err"></div>
+      <button class="btn primary block" id="v-go">向 BOT 主网核验</button>
+      <div id="v-result"></div>
+    </section>
+    <footer class="v-footer muted tiny">⛓ Built on <b>BOT Chain</b> · 存证一旦登记，永久 append-only，任何人（包括慢记自己）都无法修改或删除</footer>
+  </main>`;
+
+  const input = document.getElementById('v-input');
+  const errBox = document.getElementById('v-err');
+  const resultBox = document.getElementById('v-result');
+  document.getElementById('v-go').onclick = async () => {
+    errBox.innerHTML = '';
+    resultBox.innerHTML = '<p class="muted tiny" style="margin:12px 0">正在向 BOT 主网提问…</p>';
+    const raw = input.value.trim();
+    try {
+      const r = await api('GET', `/api/public/onchain/lookup?hash=${encodeURIComponent(raw)}`);
+      const ex = r.chain && r.chain.explorer;
+      if (r.kind === 'tx') {
+        const t = r.tx;
+        const sealRows = (t.seals || []).map((s) => `
+          <div class="v-seal">
+            <span class="tag ok tiny">#${s.index}</span>
+            <div class="chain-hash">${s.commitment}</div>
+            <span class="muted tiny">${fmtIso(s.sealedAtIso)}</span>
+          </div>`).join('');
+        resultBox.innerHTML = `
+          <div class="card soft" style="margin-top:12px">
+            <div class="v-contract-row"><span class="muted tiny">类型</span><span class="tiny">主网交易${t.isOurContract ? '' : '（非慢记合约的交易）'}</span></div>
+            <div class="v-contract-row"><span class="muted tiny">状态</span><span class="tag ${t.status ? 'ok' : 'rose'} tiny">${t.status ? 'Success' : 'Failed / Reverted'}</span></div>
+            <div class="v-contract-row"><span class="muted tiny">区块</span><span class="tiny">${t.blockNumber ?? '—'}</span></div>
+            <div class="v-contract-row"><span class="muted tiny">发起者</span><span class="mono-link">${t.from}</span></div>
+            ${sealRows ? `<div class="v-contract-row"><span class="muted tiny">登记的承诺</span></div>${sealRows}` : '<p class="muted tiny" style="margin:8px 0 0">这笔交易没有触发慢记合约的 Sealed 事件。</p>'}
+            ${ex ? `<div class="btn-row" style="margin-top:10px"><a class="btn ghost sm" href="${ex}/tx/${t.hash}" target="_blank" rel="noopener">在浏览器打开这笔交易</a></div>` : ''}
+          </div>`;
+      } else {
+        const m = r.commitment;
+        resultBox.innerHTML = m.found ? `
+          <div class="chain-integrity ok" style="margin-top:12px">
+            <div class="ic">✓</div>
+            <div><div class="t serif">已在 BOT 主网登记</div>
+            <div class="muted tiny">登记序号 #${m.index} · ${fmtIso(m.sealedAtIso)} · 任何人改不了这条记录</div></div>
+          </div>
+          <div class="chain-hash" style="margin-top:8px">${m.hash}</div>` : `
+          <div class="chain-integrity bad" style="margin-top:12px">
+            <div class="ic">✗</div>
+            <div><div class="t serif">主网上没有这条承诺</div>
+            <div class="muted tiny">它尚未被提交，或交易尚未被确认。</div></div>
+          </div>
+          <div class="chain-hash" style="margin-top:8px">${m.hash}</div>`;
+      }
+    } catch (e) {
+      resultBox.innerHTML = '';
+      errBox.innerHTML = `<div class="form-error">${esc(e.message)}</div>`;
+    }
+  };
+  input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') document.getElementById('v-go').click(); });
+}
+
 /** 永恒之链总览：整条链、逐块摘要（按权限显示标题）、完整性校验、凭证与整链导出。?home= 查看已定格旧链（B08，只读）。 */
+let sealPollTimer = null; // 主网提交状态轮询（模块级：换页重渲染后旧 interval 不会泄漏）
+let walletUnsub = null; // 钱包状态监听（重进链页时先退订旧的，避免监听器累积）
+let puppyPollTimer = null; // Agent OS 小狗身份注册轮询（模块级 + 页面清理双保险：切页/整页重绘都不泄漏）
 async function viewChain() {
+  if (puppyPollTimer) { clearInterval(puppyPollTimer); puppyPollTimer = null; } // 进入链页先清旧轮询（route 开头的页面清理之外再兜一层）
   const params = new URLSearchParams(location.hash.split('?')[1] || '');
   const archiveHome = params.get('home');
   let c;
@@ -3465,6 +3717,28 @@ async function viewChain() {
     throw e;
   }
   const archived = !!c.archived;
+  // v3.6 公共链：BOT Chain 主网状态与提交记录（未配置或权限异常时整个面板隐藏，不影响本地链）
+  let oc = null;
+  if (!archived) {
+    try {
+      const [st, list] = await Promise.all([
+        api('GET', '/api/chain/onchain/status'),
+        api('GET', '/api/chain/onchain'),
+      ]);
+      if (st.mode !== 'off') oc = { st, items: list.items || [] };
+    } catch { /* 面板隐藏 */ }
+  }
+  // v3.6 Agent OS：链上小狗身份卡（独立于上面的 BOT Chain 存证面板；接口缺失或未配置时静默降级，不影响本地链）
+  let ag = null;
+  if (!archived) {
+    const [st, puppy] = await Promise.all([
+      api('GET', '/api/agentos/status').catch(() => null),
+      api('GET', '/api/agentos/puppy').catch(() => null), // 小狗还没注册时 404，视为未注册
+    ]);
+    if (st) ag = { ...st, puppy: puppy || st.puppy || null };
+  }
+  const sealByAnchor = new Map((oc ? oc.items : []).map((i) => [i.anchorId, i]));
+  const shortHex = (h) => (h ? `${h.slice(0, 8)}…${h.slice(-6)}` : '');
   const byHeight = new Map();
   for (const a of c.anchors) byHeight.set(a.blockHeight, a);
   const heights = [0, ...c.anchors.map((a) => a.blockHeight)];
@@ -3487,8 +3761,374 @@ async function viewChain() {
       <div class="chain-meta muted tiny">${fmtIso(a.anchoredAt)} · 第 ${a.revision} 版 · ${a.type === 'promise' ? '约定' : '日记'}</div>
       <div class="chain-hash">${a.commitment}</div>
       ${a.canView ? `<button class="btn ghost sm chain-proof" data-proof="${a.anchorId}">存证凭证</button>` : ''}
+      ${oc ? `<div class="seal-chip" data-seal-chip="${a.anchorId}">${sealChipInner(a.anchorId)}</div>` : ''}
     </div>`;
   };
+
+  /** 每个区块的 BOT Chain 主网状态行（seal-chip 的内层内容，供轮询时局部刷新）：未提交给入口，已提交给状态 + 交易链接 + 核验 */
+  function sealChipInner(anchorId) {
+    if (!oc) return '';
+    const s = sealByAnchor.get(anchorId);
+    if (!s) {
+      return `<button class="btn gold sm" data-seal="${anchorId}">⛓ 提交到 BOT 主网</button>
+        <span class="muted tiny">用自己的钱包直接把这一刻刻上链</span>`;
+    }
+    const tx = s.txHash && oc.st.explorer
+      ? `<a class="mono-link" target="_blank" rel="noopener" href="${oc.st.explorer}/tx/${s.txHash}" title="在区块浏览器查看交易">${shortHex(s.txHash)}</a>`
+      : '';
+    if (s.status === 'confirmed') {
+      return `<span class="tag ok tiny">⛓ 主网已登记 #${s.sealIndex}</span>${tx}<button class="btn ghost sm" data-verify="${anchorId}" data-commitment="${s.commitment}">向主网核验</button>`;
+    }
+    if (s.status === 'submitted') {
+      return `<span class="tag chain tiny">主网：已发送，等待确认</span>${tx}<button class="btn ghost sm" data-verify="${anchorId}" data-commitment="${s.commitment}">向主网核验</button>`;
+    }
+    if (s.status === 'pending') return '<span class="tag plain tiny">主网：等待提交</span>';
+    return `<span class="tag rose tiny" title="${esc(s.error || '')}">主网：上次提交失败</span><button class="btn ghost sm" data-seal="${anchorId}">重试</button>`;
+  }
+
+  /** BOT Chain 主网面板：合约信息 + 连接钱包（C 端主网交互入口） */
+  function botchainPanelHtml() {
+    if (!oc) return '';
+    const { st } = oc;
+    const addrUrl = st.explorer && st.contract ? `${st.explorer}/address/${st.contract}` : null;
+    const countChip = typeof st.chainSealCount === 'number'
+      ? `<a class="tag ok tiny" ${addrUrl ? `href="${addrUrl}" target="_blank" rel="noopener"` : ''} title="BOT 主网合约上所有钱包登记的承诺总数">主网已登记 ${st.chainSealCount} 条承诺</a>`
+      : '';
+    return `
+    <div class="botchain-panel" id="botchain-panel">
+      <div class="bc-head">
+        <div class="bc-title serif">⛓ BOT Chain 主网存证</div>
+        <span class="tag chain tiny">${st.modeText} · 链 ${st.chainId}</span>
+        ${countChip}
+      </div>
+      <p class="bc-value serif">被刻上主网的那一刻，不再依赖任何服务器或公司——任何人，包括我们自己，都无法再修改或删除。</p>
+      <div class="bc-meta muted tiny">
+        合约 ${st.contract}${addrUrl ? `（<a class="mono-link" target="_blank" rel="noopener" href="${addrUrl}">${shortHex(st.contract)} · 浏览器</a>）` : ''}
+        ${st.explorer ? ` · <a class="mono-link" target="_blank" rel="noopener" href="${st.explorer}">scan.botchain.ai</a>` : ''}
+      </div>
+      <div class="bc-wallet" id="bc-wallet"></div>
+      <p class="muted tiny" style="margin:8px 0 0">上链的只有这句话的指纹（哈希），没有正文、照片或成员身份；登记一旦确认永久不可撤回。连接钱包后，由<b>你的钱包</b>直接签名把承诺写上 BOT 主网。· <a href="#/verify">任何人可免登录核验 →</a></p>
+    </div>`;
+  }
+
+  /** 钱包区域：未连接给按钮；已连接给地址与链状态 */
+  function renderWalletArea() {
+    const el = document.getElementById('bc-wallet');
+    if (!el || !oc) return;
+    if (!botwallet.isConnected()) {
+      const hint = botwallet.hasWallet()
+        ? '连接后即可用你的钱包直接签名上链'
+        : '未检测到钱包插件：也可由服务端代提交（下方按钮提交时自动选择）';
+      el.innerHTML = `<button class="btn primary sm" id="bc-connect">连接钱包</button><span class="muted tiny">${hint}</span>`;
+      const btn = document.getElementById('bc-connect');
+      if (btn) btn.onclick = async () => {
+        try {
+          await botwallet.connect();
+          toast('钱包已连接，正在核对 BOT 主网…');
+          await botwallet.ensureChain().catch(() => {});
+          renderWalletArea();
+        } catch (e) { toast(e.message); }
+      };
+    } else {
+      const right = botwallet.onRightChain();
+      const addr = botwallet.wallet.address;
+      el.innerHTML = `<span class="tag ${right ? 'ok' : 'rose'} tiny" title="${addr}">${shortHex(addr)} ${right ? '· 已连接 BOT 主网' : '· 未在 BOT 主网'}</span>
+        ${right ? '' : '<button class="btn ghost sm" id="bc-switch">切到 BOT 主网</button>'}`;
+      const sw = document.getElementById('bc-switch');
+      if (sw) sw.onclick = async () => {
+        try { await botwallet.ensureChain(); renderWalletArea(); }
+        catch (e) { toast(e.message); }
+      };
+    }
+  }
+
+  /** 提交一条承诺到 BOT 主网：优先用户钱包直发（v2 合约开放写入），否则走服务端 relayer */
+  async function submitToMainnet(anchorId) {
+    if (!oc) return;
+    try {
+      if (!botwallet.isConnected() && botwallet.hasWallet()) {
+        await botwallet.connect(); // 钱包弹授权框
+        await botwallet.ensureChain().catch(() => {});
+        renderWalletArea();
+      }
+      if (botwallet.isConnected() && oc.st.walletDirect) {
+        // —— C 端钱包直发：页面取 calldata → 钱包签名 → 广播 → 回填对账 ——
+        toast('请在钱包里确认这笔 BOT 主网交易（合约只收到一个承诺哈希）…');
+        const { txHash } = await sealViaWallet(anchorId);
+        toast(`已由你的钱包发上主网：${txHash.slice(0, 12)}… 等待确认`);
+        startSealPolling();
+        route();
+      } else {
+        // —— 服务端路径：auto 模式由统一 relayer 代发；manual 模式给出可直接发送的 calldata ——
+        const r = await api('POST', `/api/chain/onchain/${encodeURIComponent(anchorId)}`);
+        if (r.manual) {
+          openModal(`<h3>手动提交到 BOT 主网</h3>
+            <p class="muted tiny" style="margin:6px 0 10px">向合约 <b>${esc(r.manual.contract)}</b>（链 ${r.manual.chainId}）发送以下调用数据（seal 函数，参数只有一个 32 字节承诺哈希）：</p>
+            <div class="chain-hash" style="word-break:break-all">${r.manual.calldata}</div>
+            <p class="muted tiny">用任意 EVM 钱包（MetaMask / Remix）发送后，把交易哈希回填给管理员即可自动确认。</p>
+            <div class="btn-row"><button class="btn ghost" onclick="closeModal()">好</button></div>`);
+        } else {
+          toast('已加入提交队列，由服务端代提交（约 15 秒内发送）');
+          startSealPolling();
+          route();
+        }
+      }
+    } catch (e) {
+      toast(e.message);
+    }
+  }
+
+  /** 向主网核验一条承诺：连接了钱包就经钱包 RPC 直读（sealOf），否则问服务端 */
+  async function verifyOnMainnet(anchorId, commitment) {
+    if (!oc) return;
+    try {
+      if (botwallet.isConnected()) {
+        const raw = await botwallet.ethCall({ to: oc.st.contract, data: '0x3038bfa5' + commitment.replace(/^0x/, '') });
+        const w = (raw || '').slice(2).match(/.{64}/g) || [];
+        const found = w.length >= 3 && BigInt('0x' + w[0]) !== 0n;
+        toast(found
+          ? `钱包直读主链 ✓ 已登记（index=${Number(BigInt('0x' + w[1]))}）`
+          : '钱包直读主链：这条承诺尚未登记');
+      } else {
+        const v = await api('GET', `/api/chain/onchain/verify/${encodeURIComponent(anchorId)}`);
+        toast(v.onChain.found ? `主网核验 ✓ 已登记 index=${v.onChain.sealIndex}` : '主网上还没有这条承诺');
+      }
+    } catch (e) { toast(e.message); }
+  }
+
+  /** 有未完结的提交时轮询刷新状态徽章（局部更新，不整页重渲染）。计时器放模块级，防止换页后旧轮询泄漏。 */
+  function startSealPolling() {
+    if (sealPollTimer || !oc) return;
+    let count = 0;
+    sealPollTimer = setInterval(async () => {
+      count += 1;
+      try {
+        const list = await api('GET', '/api/chain/onchain');
+        oc.items = list.items || [];
+        for (const it of oc.items) sealByAnchor.set(it.anchorId, it);
+        for (const el of $app.querySelectorAll('[data-seal-chip]')) {
+          el.innerHTML = sealChipInner(el.dataset.sealChip);
+        }
+        const busy = oc.items.some((i) => i.status === 'pending' || i.status === 'submitted');
+        if (!busy || count >= 20) { clearInterval(sealPollTimer); sealPollTimer = null; }
+      } catch { /* 轮询失败静默 */ }
+    }, 8000);
+  }
+
+  /** 链上小狗身份的阶段文案（自链铸造状态机：PENDING→SUBMITTED→REGISTERED / FAILED） */
+  const PUPPY_STATUS_TEXT = {
+    PENDING: '铸造参数已备好，等你在钱包里签名确认…',
+    SUBMITTED: '铸造交易已发上 BOT 主网，等出块确认…',
+    FAILED: '上一次铸造没有成功，可以换一个名字再试。',
+  };
+
+  /** 链上小狗卡：自托管 ManjiPuppyIdentity 的四态（未配置 / 未铸造 / 铸造中 / 已铸造） */
+  function puppyCardHtml() {
+    if (!ag) return '';
+    if (ag.mode !== 'self') {
+      return `
+      <div class="puppy-card" id="puppy-card">
+        <div class="pc-head">
+          <div class="pc-title serif">🐕 链上小狗</div>
+          <span class="tag plain tiny">等待接入</span>
+        </div>
+        <p class="muted tiny" style="margin:8px 0 0">链上小狗身份（名字上链、链上生日、存钱罐）已就绪——等待服务端配置小狗身份合约（PUPPY_IDENTITY_CONTRACT）。</p>
+      </div>`;
+    }
+    const totalChip = typeof ag.totalPuppies === 'number' && ag.totalPuppies > 0
+      ? `<span class="tag chain tiny" title="链上小狗身份合约已铸造的总数">链上已有 ${ag.totalPuppies} 只小狗</span>`
+      : '';
+    const p = ag.puppy;
+    if (!p) {
+      return `
+      <div class="puppy-card" id="puppy-card">
+        <div class="pc-head">
+          <div class="pc-title serif">🐕 链上小狗</div>
+          <span class="tag chain tiny">BOT Chain · 链 ${esc(String(ag.chainId ?? ''))}</span>
+          ${totalChip}
+        </div>
+        <p class="pc-value serif">给我们的小狗也铸一枚链上身份：一个写上 BOT Chain 就改不了的名字。</p>
+        <p class="muted tiny" style="margin:6px 0 10px">由<b>你的钱包</b>直接签名铸造（ERC-8004 风格身份 NFT，不可转让）：名字与生日永远在链上，任何人——包括我们自己——都改不了；身份还带一个「存钱罐」地址，可以给它 BOT 当零花钱。</p>
+        <div class="btn-row"><button class="btn primary sm" id="puppy-register">给我们的小狗铸链上身份</button></div>
+      </div>`;
+    }
+    if (p.status !== 'REGISTERED') {
+      const statusText = PUPPY_STATUS_TEXT[p.status] || `当前状态：${esc(p.status || '准备中…')}`;
+      // 还没上链（PENDING/FAILED）都可以重开铸造弹窗改名字再试；SUBMITTED 等出块
+      const retryable = p.status === 'PENDING' || p.status === 'FAILED' || !!p.error;
+      const tagText = p.status === 'SUBMITTED' ? '铸造中' : '待铸造';
+      return `
+      <div class="puppy-card" id="puppy-card">
+        <div class="pc-head">
+          <div class="pc-title serif">🐕 ${esc(p.name || '家里的小狗')}</div>
+          <span class="tag chain tiny">${tagText}</span>
+        </div>
+        <p class="pc-value serif">小狗正在 BOT Chain 上落户口——有了自己的名字，就有了一个谁也拿不走的身份。</p>
+        <p class="pc-status muted tiny">${statusText}这一页每 15 秒会自己看一眼进度。</p>
+        ${p.error ? `<p class="muted tiny" style="margin:6px 0 0">上一次尝试遇到点问题：${esc(p.error)}</p>` : ''}
+        ${retryable ? `<div class="btn-row" style="margin-top:8px"><button class="btn ghost sm" id="puppy-retry">换名字再试一次</button></div>` : ''}
+      </div>`;
+    }
+    const registryUrl = ag.explorer && ag.contract ? `${ag.explorer}/address/${ag.contract}` : null;
+    const accountUrl = ag.explorer && p.accountAddress ? `${ag.explorer}/address/${p.accountAddress}` : null;
+    return `
+    <div class="puppy-card" id="puppy-card">
+      <div class="pc-head">
+        <div class="pc-title serif">🐕 ${esc(p.name || '家里的小狗')}</div>
+        <span class="tag ok tiny" title="链上小狗身份 NFT（ERC-8004 风格，不可转让）的编号">链上身份 #${esc(String(p.agentTokenId ?? ''))}</span>
+        ${totalChip}
+      </div>
+      <p class="pc-value serif">小狗在 BOT Chain 上有了自己的名字——写上去，就谁也改不了。</p>
+      <div class="pc-meta muted tiny">
+        身份合约${registryUrl ? `（<a class="mono-link" href="${registryUrl}" target="_blank" rel="noopener">${shortHex(ag.contract)} · 浏览器</a>）` : ''}
+        ${p.mintTxUrl ? ` · <a class="mono-link" href="${p.mintTxUrl}" target="_blank" rel="noopener" title="铸造交易">铸造交易 ↗</a>` : ''}
+      </div>
+      <div class="pc-row muted tiny">
+        <span>存钱罐</span>
+        ${accountUrl
+          ? `<a class="mono-link" href="${accountUrl}" target="_blank" rel="noopener" title="在浏览器查看小狗的存钱罐地址">${esc(p.accountAddress)}</a>`
+          : `<span class="mono-link">${esc(p.accountAddress || '—')}</span>`}
+      </div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn ghost sm" id="puppy-verify">向主网核验这个身份</button>
+      </div>
+      <div class="pc-tip">
+        <span class="muted tiny">给小狗一点 BOT 当零花钱（从你的钱包直接转给它）：</span>
+        <div class="pc-tip-form">
+          <input class="input" id="puppy-tip-amount" inputmode="decimal" placeholder="1.5" autocomplete="off">
+          <span class="muted tiny">BOT</span>
+          <button class="btn gold sm" id="puppy-tip-btn">打赏</button>
+        </div>
+        <p class="muted tiny" style="margin:6px 0 0">链上到账，进的是小狗自己的存钱罐；金额原样发出，不加也不减。</p>
+      </div>
+    </div>`;
+  }
+
+  /** 铸造小狗链上身份：弹窗填名字与存钱罐 → 服务端备好 calldata → 连接的钱包签名 mint → 回填交易 → 轮询出块 */
+  async function registerPuppyIdentity() {
+    const defaultWallet = botwallet.isConnected() ? botwallet.wallet.address : '';
+    const defaultName = (ag && ag.puppy && ag.puppy.name) || '';
+    openModal(`<h3>给小狗铸链上身份</h3>
+      <div class="anchor-quote serif">写上 BOT Chain 的名字，谁也改不了。</div>
+      <div class="field" style="margin-top:10px"><label class="muted tiny">小狗的名字（上链后不可改，约 10 个汉字以内）</label>
+        <input class="input" id="puppy-name-input" maxlength="32" value="${esc(defaultName)}" placeholder="比如：毛毛"></div>
+      <div class="field" style="margin-top:8px"><label class="muted tiny">存钱罐地址（打赏发这里；可填你的钱包，也可另建一个）</label>
+        <input class="input" id="puppy-wallet-input" value="${esc(defaultWallet)}" placeholder="0x…"></div>
+      <p class="muted tiny" style="margin:8px 0 10px">铸造交易由<b>你的钱包</b>直接签名发上 BOT 主网（链 677），页面只准备数据。身份 NFT 不可转让：它属于这个小狗，就永远属于。</p>
+      <div id="puppy-mint-err"></div>
+      <div class="btn-row"><button class="btn ghost" id="puppy-mint-cancel">再想想</button>
+      <button class="btn primary" id="puppy-mint-go">⛓ 在钱包里铸造</button></div>`);
+    document.getElementById('puppy-mint-cancel').onclick = closeModal;
+    document.getElementById('puppy-mint-go').onclick = async () => {
+      const errBox = document.getElementById('puppy-mint-err');
+      errBox.innerHTML = '';
+      const name = String(document.getElementById('puppy-name-input').value || '').trim();
+      const agentWallet = String(document.getElementById('puppy-wallet-input').value || '').trim();
+      const nb = new TextEncoder().encode(name);
+      if (nb.length === 0 || nb.length > 32) {
+        errBox.innerHTML = '<div class="form-error">名字长度需在 1-32 字节之间（约 10 个汉字以内）</div>';
+        return;
+      }
+      if (!/^0x[0-9a-fA-F]{40}$/.test(agentWallet)) {
+        errBox.innerHTML = '<div class="form-error">存钱罐地址格式不对（0x 开头的 40 位十六进制）</div>';
+        return;
+      }
+      const btn = document.getElementById('puppy-mint-go');
+      btn.disabled = true;
+      btn.textContent = '正在准备…';
+      try {
+        const prep = await api('POST', '/api/agentos/puppy/register', { name, agentWallet });
+        if (!botwallet.isConnected()) await botwallet.connect();
+        if (!botwallet.onRightChain()) await botwallet.ensureChain();
+        btn.textContent = '请在钱包里确认…';
+        toast('请在钱包里确认这笔铸造交易（名字会永远写上 BOT Chain）…');
+        const txHash = await botwallet.sendTx({ to: prep.contract, data: prep.calldata });
+        await api('POST', '/api/agentos/puppy/bind', { txHash });
+        closeModal();
+        toast(`已由你的钱包铸出：交易 ${shortHex(txHash)}，等出块确认`);
+        route(); // 重绘成「铸造中」卡片并启动轮询
+      } catch (e) {
+        if (e.code === 'ALREADY_REGISTERED') { closeModal(); toast('小狗已经有链上身份了'); route(); return; }
+        toast(e.message);
+        btn.disabled = false;
+        btn.textContent = '⛓ 在钱包里铸造';
+      }
+    };
+  }
+
+  /** 核验小狗的链上身份：连了钱包就经钱包 RPC 直读 IdentityRegistry.ownerOf（选择器 0x6352211e + tokenId，不依赖慢记后端），否则问服务端 */
+  async function verifyPuppyOwner() {
+    const p = ag && ag.puppy;
+    if (!ag || !p || !p.agentTokenId) return;
+    const btn = document.getElementById('puppy-verify');
+    if (btn) btn.disabled = true;
+    try {
+      if (botwallet.isConnected()) {
+        const data = '0x6352211e' + BigInt(p.agentTokenId).toString(16).padStart(64, '0');
+        const raw = await botwallet.ethCall({ to: ag.contract, data });
+        const owner = '0x' + String(raw || '').replace(/^0x/, '').slice(-40);
+        toast(/^0x0{40}$/i.test(owner)
+          ? '钱包直读主链：链上还没有这个身份'
+          : `钱包直读主链 ✓ 身份 #${p.agentTokenId} 属于 ${shortHex(owner)}`);
+      } else {
+        const v = await api('GET', '/api/agentos/puppy/verify');
+        toast(v && v.found
+          ? `主网核验 ✓ 身份 #${p.agentTokenId} 真实在链上${v.owner ? `，属于 ${shortHex(v.owner)}` : ''}`
+          : '主网上还没有查到这个身份');
+      }
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  /** 给小狗打赏 BOT：先在慢记落一笔 pending，再用连接的钱包直发原生转账，最后回填交易哈希（照 sealViaWallet 的模式） */
+  async function tipPuppy() {
+    const p = ag && ag.puppy;
+    if (!ag || !p || !p.accountAddress) return;
+    const input = document.getElementById('puppy-tip-amount');
+    const btn = document.getElementById('puppy-tip-btn');
+    const amountBot = String((input && input.value) || '').trim();
+    const n = Number(amountBot);
+    if (!amountBot || !Number.isFinite(n) || n <= 0 || n > 1000) {
+      toast('想给小狗多少 BOT？填一个大于 0、不超过 1000 的小数目');
+      return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = '打赏中…'; }
+    try {
+      const t = await api('POST', '/api/agentos/puppy/tip', { amountBot });
+      // amountWei 是十进制字符串：BigInt(字符串) 无损换算成 wei 再转十六进制给钱包——绝不过 Number，wei 级精度丢不得
+      if (!botwallet.isConnected()) await botwallet.connect();
+      if (!botwallet.onRightChain()) await botwallet.ensureChain();
+      toast('请在钱包里确认这笔给小狗的 BOT 转账…');
+      const txHash = await botwallet.sendTx({ to: t.toAddress, value: '0x' + BigInt(t.amountWei).toString(16) });
+      await api('POST', `/api/agentos/puppy/tip/${encodeURIComponent(t.tipId)}/bind`, { txHash });
+      toast(`已给小狗转了 ${amountBot} BOT：交易 ${shortHex(txHash)}，等链上确认`);
+      if (input) input.value = '';
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '打赏'; }
+    }
+  }
+
+  /** 注册中的小狗身份进度轮询：每 15 秒整页 route() 重绘（重绘先清掉本计时器、再按需重建，循环自洽；切页由页面清理与哈希守卫双保险收口） */
+  function startPuppyPolling() {
+    if (puppyPollTimer) return;
+    let count = 0;
+    puppyPollTimer = setInterval(async () => {
+      if (!location.hash.startsWith('#/chain')) { clearInterval(puppyPollTimer); puppyPollTimer = null; return; }
+      count += 1;
+      try {
+        const st = await api('GET', '/api/agentos/status');
+        if (st && st.puppy && st.puppy.status === 'REGISTERED') toast('小狗的链上身份注册好了 🐕');
+      } catch { /* 本轮查询失败不打扰，交给下一次 */ }
+      if (count >= 20) { clearInterval(puppyPollTimer); puppyPollTimer = null; } // 上限兜底
+      route();
+    }, 15000);
+    registerPageCleanup(() => { clearInterval(puppyPollTimer); puppyPollTimer = null; });
+  }
 
   $app.innerHTML = `
   ${topbar({ title: '永恒之链', en: archived ? 'FROZEN CHAIN' : 'ETERNAL CHAIN' })}
@@ -3503,6 +4143,8 @@ async function viewChain() {
       </div>
       ${archived ? '<span class="tag plain">只读</span>' : '<button class="btn ghost sm" id="btn-verify">再验证一次</button>'}
     </div>
+    ${botchainPanelHtml()}
+    ${puppyCardHtml()}
     ${c.anchors.length === 0 ? `<div class="empty"><div class="big">${archived ? '这条旧链上没有可给你看的瞬间' : '还没有镌刻任何瞬间'}</div>
       <p class="muted tiny">${archived ? '链上只保存指纹；无权查看的部分不在此展示。' : '在约定或日记里点「镌刻上链」，把值得永远记住的一刻接到链上。'}</p>
       ${archived ? '' : '<a class="btn ghost" href="#/promises">去看看约定</a>'}</div>` : ''}
@@ -3515,6 +4157,33 @@ async function viewChain() {
     </div>
   </div>
   ${tabbar('memorial')}`;
+
+  // BOT Chain 主网面板：钱包区域渲染 + 事件委托挂在链列表容器上（轮询局部刷新徽章不会冲掉处理器）
+  renderWalletArea();
+  if (walletUnsub) walletUnsub();
+  walletUnsub = botwallet.onWalletChange(() => renderWalletArea());
+
+  // 链上小狗卡：渲染后对卡内控件直绑（卡片不做局部刷新轮询，整页 route() 重绘会连带重建这些绑定）
+  const puppyRegisterBtn = document.getElementById('puppy-register');
+  if (puppyRegisterBtn) puppyRegisterBtn.onclick = registerPuppyIdentity;
+  const puppyRetryBtn = document.getElementById('puppy-retry');
+  if (puppyRetryBtn) puppyRetryBtn.onclick = registerPuppyIdentity;
+  const puppyVerifyBtn = document.getElementById('puppy-verify');
+  if (puppyVerifyBtn) puppyVerifyBtn.onclick = verifyPuppyOwner;
+  const puppyTipBtn = document.getElementById('puppy-tip-btn');
+  if (puppyTipBtn) puppyTipBtn.onclick = tipPuppy;
+  const puppyTipInput = document.getElementById('puppy-tip-amount');
+  if (puppyTipInput) puppyTipInput.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') tipPuppy(); });
+  if (ag && ag.mode === 'self' && ag.puppy && ag.puppy.status !== 'REGISTERED') startPuppyPolling();
+  if (oc) {
+    $app.querySelector('.chain-list').addEventListener('click', (ev) => {
+      const sealBtn = ev.target.closest('[data-seal]');
+      if (sealBtn) { submitToMainnet(sealBtn.dataset.seal); return; }
+      const vBtn = ev.target.closest('[data-verify]');
+      if (vBtn) verifyOnMainnet(vBtn.dataset.verify, vBtn.dataset.commitment);
+    });
+    if (oc.items.some((i) => i.status === 'pending' || i.status === 'submitted')) startSealPolling();
+  }
 
   const verifyBtn = document.getElementById('btn-verify');
   if (verifyBtn) {

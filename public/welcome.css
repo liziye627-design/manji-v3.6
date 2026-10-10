@@ -36,6 +36,13 @@ body:has(.welcome-page) { background: #e8ebe3; }
 .welcome-us { position: relative; color: var(--welcome-green); white-space: nowrap; }
 .welcome-us svg { position: absolute; width: 100%; height: 9px; bottom: -5px; left: 0; color: #b7bc9c; }
 .welcome-description { margin: 19px 0 0; color: var(--welcome-muted); font-size: 12px; line-height: 1.9; letter-spacing: .025em; }
+.welcome-herochain {
+  margin: 16px 0 0; padding: 8px 14px; border: 1px solid #E0D3AE; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
+  background: #F6F0DD; color: #75683B; font-size: 10.5px; letter-spacing: .04em;
+}
+.welcome-herochain b { color: #5F5327; font-weight: 700; }
+.welcome-herochain a { color: #4F6B3F; font-weight: 600; }
 .welcome-illustration { position: relative; width: 100%; margin: 18px 0 24px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
 .welcome-scene { position: relative; width: 330px; max-width: 100%; height: 292px; margin: 0 auto; }
 .welcome-arch { position: absolute; left: 66px; top: 5px; width: 209px; height: 244px; border: 7px solid #e5e4d5; border-bottom-width: 10px; border-radius: 110px 110px 5px 5px; background: #e4eadb; overflow: hidden; box-shadow: inset 0 0 0 1px #c9d2be, 4px 4px 0 #d9ddcc; }
@@ -64,6 +71,24 @@ body:has(.welcome-page) { background: #e8ebe3; }
 .welcome-note svg { display: block; margin: 4px 0 0 25px; width: 39px; height: 27px; }
 .welcome-illustration figcaption { display: flex; align-items: center; justify-content: center; gap: 11px; margin-top: 12px; font-size: 10px; color: var(--welcome-muted); letter-spacing: .13em; white-space: nowrap; }
 .welcome-illustration figcaption > span { height: 1px; width: 20px; background: #d4d6c7; }
+/* 永恒之链 × BOT Chain 主网：核心价值展示区（访客第一眼可见的链上能力） */
+.welcome-eternal {
+  position: relative; margin: 0 0 22px; padding: 16px 18px 15px;
+  border: 1px solid #d8dcc8; border-radius: 16px; text-align: center;
+  background: linear-gradient(180deg, #f3f4ea, #eef0e2);
+}
+.we-chain { display: flex; justify-content: center; color: var(--welcome-green); }
+.we-chain svg { width: 96px; height: 24px; }
+.we-title { margin: 8px 0 0; font-family: "Noto Serif SC", "Songti SC", "STSong", SimSun, serif; font-size: 17px; font-weight: 600; letter-spacing: .06em; color: var(--welcome-ink); }
+.we-copy { margin: 8px auto 0; max-width: 34em; color: var(--welcome-muted); font-size: 11.5px; line-height: 1.95; letter-spacing: .02em; }
+.we-copy b { color: #43583f; font-weight: 600; }
+.we-badges { display: flex; justify-content: center; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+.we-badge {
+  display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid #c8cfb4; background: #fbfbf4; color: #5a6b50; font-size: 10px; letter-spacing: .05em;
+  text-decoration: none; white-space: nowrap;
+}
+a.we-badge:hover { border-color: var(--welcome-green); color: #344b30; }
 .welcome-actions { position: relative; width: 100%; text-align: center; }
 .welcome-start { display: flex; align-items: center; justify-content: space-between; min-height: 54px; padding: 0 22px; border: 1px solid var(--welcome-green); border-radius: 14px; color: #fffdf5; background: var(--welcome-green); font-size: 14px; font-weight: 500; letter-spacing: .12em; transition: background .18s, transform .18s; }
 .welcome-start svg { width: 22px; height: 22px; }
@@ -79,8 +104,9 @@ body:has(.welcome-page) { background: #e8ebe3; }
   .welcome-login:hover { text-decoration: underline; text-underline-offset: 4px; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .welcome-intro, .welcome-illustration, .welcome-actions { animation: welcome-arrive .65s both; }
+  .welcome-intro, .welcome-illustration, .welcome-eternal, .welcome-actions { animation: welcome-arrive .65s both; }
   .welcome-illustration { animation-delay: .09s; }
+  .welcome-eternal { animation-delay: .13s; }
   .welcome-actions { animation-delay: .17s; }
   @keyframes welcome-arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 }

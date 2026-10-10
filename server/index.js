@@ -14,10 +14,12 @@ import { routes as mediaRoutes, cleanupStaleUploads } from './routes/media.js';
 import { routes as lifeRoutes } from './routes/life.js';
 import { routes as chainRoutes } from './routes/chain.js';
 import { routes as onchainRoutes } from './routes/onchain.js';
+import { routes as agentosRoutes } from './routes/agentos.js';
 import { startOnchainSubmitter, onchainMode } from './domain/public-chain.js';
+import { startAgentosPoller, agentosMode } from './domain/agentos.js';
 
 const routes = {};
-for (const group of [accountRoutes, memoryRoutes, mediaRoutes, lifeRoutes, chainRoutes, onchainRoutes]) {
+for (const group of [accountRoutes, memoryRoutes, mediaRoutes, lifeRoutes, chainRoutes, onchainRoutes, agentosRoutes]) {
   for (const [k, v] of Object.entries(group)) {
     const [method, pattern] = k.split(' ');
     const keys = [];
@@ -37,6 +39,9 @@ const PUBLIC_ROUTES = new Set([
   'POST /api/auth/logout',
   'GET /api/invites/info',
   'GET /api/invites/preview',
+  // 公开核验门户（免登录）：只暴露链上本来就公开的事实
+  'GET /api/public/onchain/info',
+  'GET /api/public/onchain/lookup',
 ]);
 
 const MIME = {
@@ -180,6 +185,7 @@ cleanupStaleUploads();
 setInterval(cleanupStaleUploads, 12 * 3600 * 1000).unref();
 ensureAdmin();
 startOnchainSubmitter(); // v3.6：公共链提交/复核后台（未配置时静默关闭）
+startAgentosPoller(); // v3.6：Agent OS 后台——小狗身份推进 + 打赏对账（未配置 key 时静默关闭）
 
 server.listen(config.port, () => {
   console.log(`慢记 Manji v${config.version} 已启动`);
@@ -188,6 +194,7 @@ server.listen(config.port, () => {
   console.log(`  媒体库:  ${config.mediaRoot}`);
   console.log(`  时区:    ${config.bizTimezone}`);
   console.log(`  公共链:  ${onchainMode() === 'off' ? '未配置（本地永恒之链不受影响）' : `${onchainMode()} 模式 · 合约 ${config.onchain.contract}`}`);
+  console.log(`  链上小狗: ${agentosMode() === 'self' ? `自链模式 · 合约 ${config.puppyIdentity.contract}` : '未配置'}`);
   console.log(`  管理员:  ${config.adminDisplayName}（密码见 .env 的 ADMIN_PASSWORD，默认 admin-2026）`);
 });
 

@@ -11,6 +11,7 @@ import {
   currentHome, membershipOf, partnerOf, getPet, notify, memberPreference, getUser, getHome,
 } from '../domain/permissions.js';
 import { anchorsForRecord } from '../domain/chain.js';
+import { mainnetSealOfAnchor } from '../domain/public-chain.js';
 
 const SLOT_KEYS = ROOM_SLOTS.map((s) => s.key);
 
@@ -365,6 +366,7 @@ export const routes = {
                     isCurrentRevision: latest.revision === c.current_version,
                     anchoredAt: latest.created_at,
                     anchorCount: anchors.length,
+                    mainnet: mainnetSealOfAnchor(latest.id),
                   }
                 : null,
             };

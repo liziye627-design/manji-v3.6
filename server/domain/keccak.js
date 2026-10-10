@@ -115,6 +115,12 @@ const COMPILED_SELECTORS = {
   'anchorHead(bytes16,bytes32,uint64)': '3f81a88e',
   'headOf(bytes16)': '2b2b7096',
   'sealCount()': '726804ab',
+  'VERSION()': 'ffa1ad74',
+  // ManjiPuppyIdentity（v3.6.3，solc 0.8.24 真实编译输出）
+  'mint(string,address)': '1c351a9d',
+  'ownerOf(uint256)': '6352211e',
+  'getAgentWallet(uint256)': '00339509',
+  'totalSupply()': '18160ddd',
 };
 for (const [sig, expected] of Object.entries(COMPILED_SELECTORS)) {
   if (selectorOf(sig) !== expected) {

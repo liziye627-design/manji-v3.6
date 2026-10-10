@@ -10,7 +10,8 @@ import { currentHome } from '../domain/permissions.js';
 import { canViewAnchoredRecord } from './chain.js';
 import {
   onchainMode, queueSummary, sealsOfHome, sealRowOf, enqueueSeal, bindTx, refreshSealRow,
-  enqueueHeadAnchor, headRowOf, verifyCommitmentOnChain, buildSealCalldata, explorerTxUrl, CONTRACT_NAME,
+  enqueueHeadAnchor, headRowOf, verifyCommitmentOnChain, buildSealCalldata, explorerTxUrl, explorerBase, CONTRACT_NAME,
+  walletDirectSupported, cachedChainSealCount, publicChainInfo, publicLookup,
 } from '../domain/public-chain.js';
 
 const PRIVACY_NOTE =
@@ -68,6 +69,26 @@ function sealPayload(row) {
 }
 
 export const routes = {
+  /** 公开核验门户（免登录）：链上事实一览——合约、链、主网登记总数。不含任何应用内部数据 */
+  'GET /api/public/onchain/info': async () => {
+    const info = await withRpcErrors(() => publicChainInfo());
+    if (!info.configured) {
+      throw errors.conflict('ONCHAIN_NOT_CONFIGURED', '公共链锚定未配置：请在 .env 设置 ONCHAIN_RPC_URL / ONCHAIN_CHAIN_ID / ONCHAIN_CONTRACT');
+    }
+    return { status: 200, data: { data: info } };
+  },
+
+  /** 公开核验门户（免登录）：查一笔交易（解析 Sealed 事件）或一条承诺（sealOf） */
+  'GET /api/public/onchain/lookup': async (ctx) => {
+    requireConfigured();
+    const input = String(ctx.query.get('hash') || '').trim().toLowerCase().replace(/^0x/, '');
+    if (!/^[0-9a-f]{64}$/.test(input)) {
+      throw errors.invalid({ hash: '需要 64 位十六进制的承诺哈希或交易哈希' }, '哈希格式无效');
+    }
+    const result = await withRpcErrors(() => publicLookup(input));
+    return { status: 200, data: { data: { input: '0x' + input, ...result, chain: { chainId: Number(process.env.ONCHAIN_CHAIN_ID), contract: process.env.ONCHAIN_CONTRACT, explorer: explorerBase() } } } };
+  },
+
   /** 公共链配置与队列总览（登录即可看；不涉及任何内容） */
   'GET /api/chain/onchain/status': async (ctx) => {
     const mode = onchainMode();
@@ -81,6 +102,10 @@ export const routes = {
           contractName: CONTRACT_NAME,
           chainId: mode === 'off' ? null : Number(process.env.ONCHAIN_CHAIN_ID) || null,
           contract: mode === 'off' ? null : process.env.ONCHAIN_CONTRACT || null,
+          explorer: mode === 'off' ? null : explorerBase(),
+          // v2+ 合约开放 seal 写权限：页面可让用户连接自己的钱包直接签名上链（C 端主网交互）
+          walletDirect: mode === 'off' ? null : await walletDirectSupported(),
+          chainSealCount: mode === 'off' ? null : await cachedChainSealCount(),
           queue: queueSummary(),
           privacyNote: PRIVACY_NOTE,
         },
@@ -120,6 +145,31 @@ export const routes = {
     return { status: queued ? 201 : 200, data: { data: result } };
   },
 
+  /**
+   * 钱包直发辅助（只读）：给出这条承诺经用户自己的钱包发送所需的全部信息。
+   * v2 合约 seal 对任何钱包开放；calldata 只有选择器 + 一个 32 字节承诺哈希，发送前可肉眼审阅。
+   */
+  'GET /api/chain/onchain/seal-calldata/:anchorId': async (ctx) => {
+    requireConfigured();
+    const a = requireAnchor(ctx);
+    audit(ctx.user.id, 'onchain-calldata', a.record_type, a.record_id, a.revision);
+    return {
+      status: 200,
+      data: {
+        data: {
+          anchorId: a.id,
+          commitment: a.commitment,
+          contract: process.env.ONCHAIN_CONTRACT,
+          chainId: Number(process.env.ONCHAIN_CHAIN_ID),
+          calldata: buildSealCalldata(a.commitment),
+          explorer: explorerBase(),
+          walletDirect: await walletDirectSupported(),
+          note: '在页面上用连接的钱包把这笔 calldata 发给合约（seal 函数）；交易确认后回填交易哈希即可自动对账。',
+        },
+      },
+    };
+  },
+
   /** 手动模式：回填运营者已发送的交易哈希，之后自动轮询回执并确认 */
   'POST /api/chain/onchain/:anchorId/bind': async (ctx) => {
     requireConfigured();
@@ -127,10 +177,12 @@ export const routes = {
     const a = requireAnchor(ctx);
     if (a.home_id !== home.id) throw errors.notFound();
     const body = ctx.json();
-    if (typeof body.txHash !== 'string' || !/^[0-9a-fA-F]{64}$/.test(body.txHash)) {
+    // 钱包/浏览器返回的交易哈希带 0x 前缀，统一剥掉再校验
+    const txHash = String((body && body.txHash) || '').toLowerCase().replace(/^0x/, '');
+    if (!/^[0-9a-f]{64}$/.test(txHash)) {
       throw errors.invalid({ txHash: '交易哈希必须是 64 位十六进制' }, '交易哈希格式无效');
     }
-    const row = bindTx(a.id, body.txHash.toLowerCase());
+    const row = bindTx(a.id, txHash);
     audit(ctx.user.id, 'onchain-bind', a.record_type, a.record_id, row.status, a.revision);
     return { status: 200, data: { data: sealPayload(row) } };
   },

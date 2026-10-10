@@ -12,6 +12,7 @@ import {
 } from '../domain/permissions.js';
 import { buildZip } from '../domain/zip.js';
 import { anchorsForRecord } from '../domain/chain.js';
+import { mainnetSealOfAnchor } from '../domain/public-chain.js';
 import { readMediaFile } from './media.js';
 
 const WORK_TEMPLATES = ['polaroid', 'stamp', 'gallery'];
@@ -816,6 +817,7 @@ function promisePayload(p, user) {
           isCurrentRevision: latest.revision === p.revision,
           anchoredAt: latest.created_at,
           anchorCount: anchors.length,
+          mainnet: mainnetSealOfAnchor(latest.id),
         }
       : null,
   };

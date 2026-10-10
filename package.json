@@ -12,6 +12,7 @@
     "test": "node tests/run-acceptance.mjs",
     "test:chain": "node tests/chain-acceptance.mjs",
     "test:onchain": "node tests/onchain-acceptance.mjs",
+    "test:agentos": "node tests/agentos-acceptance.mjs",
     "compile:contract": "node scripts/compile-contract.mjs",
     "test:navigation": "node --test tests/navigation.test.mjs"
   },

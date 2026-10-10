@@ -764,6 +764,7 @@ button:focus-visible, a:focus-visible, .tab:focus-visible, input:focus-visible, 
 
 /* ==== v3.4 永恒之链 ==== */
 .tag.chain { background: #F6E7CB; color: #8A6420; font-weight: 600; text-decoration: none; }
+.tag.chain.ok { background: #E7F2E2; color: #4A7B3A; } /* 已确认主网登记的约定/日记徽章 */
 .anchor-quote {
   background: var(--card-soft);
   border-radius: var(--radius-sm);
@@ -832,6 +833,98 @@ button:focus-visible, a:focus-visible, .tab:focus-visible, input:focus-visible, 
 .chain-title { font-size: 15px; }
 .chain-meta { margin: 2px 0 4px 2px; }
 .chain-proof { margin-top: 8px; }
+
+/* ================= v3.6.4 · BOT Chain 全局可见性（顶栏徽章 + 首页链上足迹条） ================= */
+.topbar-chain {
+  margin-left: auto; margin-right: 10px;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 999px;
+  background: #F6E7CB; color: #8A6420; font-size: 11px; font-weight: 600;
+  text-decoration: none; white-space: nowrap; border: 1px solid #E7CFA5;
+  transition: background .15s;
+}
+.topbar-chain:active { transform: scale(0.97); }
+.topbar-chain .tc-count {
+  display: inline-flex; min-width: 16px; height: 16px; align-items: center; justify-content: center;
+  padding: 0 4px; border-radius: 999px; background: #8A6420; color: #FFF8E8; font-size: 9.5px; font-weight: 700;
+}
+.chain-strip {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 15px; margin-bottom: 12px;
+  border: 1px solid #E7CFA5; border-radius: 14px;
+  background: linear-gradient(135deg, #FDF6E9, #F8EED6);
+  cursor: pointer; user-select: none;
+}
+.chain-strip .cs-ico {
+  width: 38px; height: 38px; flex: 0 0 38px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; font-size: 19px;
+  background: #F1E2BF;
+}
+.chain-strip .cs-body { flex: 1; min-width: 0; }
+.chain-strip .cs-title { font-size: 15px; font-weight: 600; color: #6B5420; }
+.chain-strip .cs-counts { margin-top: 2px; }
+.chain-strip .cs-counts b { color: #4A7B3A; font-weight: 700; }
+.chain-strip .cs-go { color: #B99A4E; font-size: 18px; font-weight: 700; }
+
+/* ================= v3.6 · BOT Chain 主网面板与主网状态徽章 ================= */
+.botchain-panel {
+  background: linear-gradient(135deg, #FDF6E9, #FBF1DC);
+  border: 1px solid #E7CFA5; border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft); padding: 12px 14px; margin-bottom: 14px;
+}
+.bc-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bc-title { font-size: 16px; }
+.bc-value { margin: 8px 0 0; font-size: 14px; line-height: 1.8; color: #6B5420; }
+.bc-meta { margin: 6px 0 0 2px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.bc-wallet { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.mono-link {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 11px; color: var(--coffee); text-decoration: underline; text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+.seal-chip {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-top: 8px; padding-top: 8px; border-top: 1px dashed #EAD9B8;
+}
+.seal-chip .muted.tiny { flex: 1; min-width: 120px; }
+
+/* ================= v3.6 · 链上小狗（BOT Chain Agent OS 链上身份卡） ================= */
+.puppy-card {
+  background: var(--card); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft); padding: 12px 14px; margin-bottom: 14px;
+}
+.pc-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pc-title { font-size: 16px; }
+.pc-value { margin: 8px 0 0; font-size: 14px; line-height: 1.8; color: var(--ink); }
+.pc-meta { margin: 6px 0 0 2px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.pc-row { margin: 6px 0 0 2px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pc-row > span:first-child { flex: 0 0 4.5em; }
+.pc-status { margin: 8px 0 0 2px; }
+.pc-tip { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #EAD9B8; }
+.pc-tip-form { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.pc-tip-form .input { width: 120px; padding: 10px 18px; font-size: 14px; }
+
+/* ================= v3.6 · BOT Chain 公开核验门户（免登录 #/verify） ================= */
+.verify-page {
+  max-width: 560px; margin: 0 auto; padding: max(24px, env(safe-area-inset-top)) 22px 40px;
+  display: flex; flex-direction: column; gap: 16px; min-height: 100vh;
+}
+.v-header { display: flex; align-items: center; justify-content: space-between; }
+.v-brand { font-size: 21px; font-weight: 600; letter-spacing: 0.1em; }
+.v-brand small { display: block; font-size: 8px; letter-spacing: 0.22em; color: var(--sub); font-family: Georgia, serif; }
+.v-home { text-decoration: none; }
+.v-hero { text-align: center; padding: 6px 0 2px; }
+.v-chainmark { display: flex; justify-content: center; color: #8A6420; }
+.v-chainmark svg { width: 88px; height: 22px; }
+.v-hero h1 { margin: 8px 0 8px; font-size: 22px; font-weight: 600; }
+.v-hero p { margin: 0 auto; max-width: 34em; font-size: 12.5px; line-height: 1.9; }
+.v-contract { display: grid; gap: 8px; padding: 12px 14px; }
+.v-contract-row { display: flex; align-items: center; gap: 10px; }
+.v-contract-row > span:first-child { flex: 0 0 4.5em; }
+.v-lookup .input { font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+.v-seal { display: flex; align-items: center; gap: 8px; margin: 6px 0; flex-wrap: wrap; }
+.v-seal .chain-hash { flex: 1; min-width: 200px; margin-top: 0; }
+.v-footer { text-align: center; margin-top: auto; }
 
 /* ================= v3.5 · 新动态提示（U02） ================= */
 .freshness-banner {
