@@ -3619,7 +3619,7 @@ function openAnchorModal({ type, id, snippet, shared }) {
         } catch (e) {
           closeModal();
           if (/未检测到浏览器钱包/.test(e.message)) {
-            toast('未检测到钱包插件：可去永恒之链页由服务端代提交');
+            toast('未检测到钱包：装 MetaMask / OKX 插件后刷新，或用手机钱包 App 内置浏览器打开慢记');
             location.hash = '#/chain';
           } else {
             toast(e.message);
@@ -3916,7 +3916,7 @@ async function viewChain() {
     if (!botwallet.isConnected()) {
       const hint = botwallet.hasWallet()
         ? '连接后即可用你的钱包直接签名上链'
-        : '未检测到钱包插件：也可由服务端代提交（下方按钮提交时自动选择）';
+        : '未检测到钱包：电脑装 MetaMask / OKX 插件，或用手机钱包 App 的内置浏览器打开慢记';
       el.innerHTML = `<button class="btn primary sm" id="bc-connect">连接钱包</button><span class="muted tiny">${hint}</span>`;
       const btn = document.getElementById('bc-connect');
       if (btn) btn.onclick = async () => {
@@ -3957,14 +3957,24 @@ async function viewChain() {
         startSealPolling();
         route();
       } else {
-        // —— 服务端路径：auto 模式由统一 relayer 代发；manual 模式给出可直接发送的 calldata ——
+        // —— 服务端路径：auto 模式由统一 relayer 代发；manual 模式引导用户用自己的钱包直签（calldata 留作高级入口） ——
         const r = await api('POST', `/api/chain/onchain/${encodeURIComponent(anchorId)}`);
         if (r.manual) {
-          openModal(`<h3>手动提交到 BOT 主网</h3>
-            <p class="muted tiny" style="margin:6px 0 10px">向合约 <b>${esc(r.manual.contract)}</b>（链 ${r.manual.chainId}）发送以下调用数据（seal 函数，参数只有一个 32 字节承诺哈希）：</p>
-            <div class="chain-hash" style="word-break:break-all">${r.manual.calldata}</div>
-            <p class="muted tiny">用任意 EVM 钱包（MetaMask / Remix）发送后，把交易哈希回填给管理员即可自动确认。</p>
-            <div class="btn-row"><button class="btn ghost" onclick="closeModal()">好</button></div>`);
+          openModal(`<h3>用你的钱包完成上链</h3>
+            <p class="muted" style="font-size:14px;margin:6px 0 10px">刻上 BOT 主网由<b>你自己的钱包签名</b>（只需要少量 BOT 作手续费），慢记不接触任何私钥——这是每个人自己的选择。</p>
+            <ul class="anchor-notes">
+              <li>电脑：安装 <b>MetaMask</b> / <b>OKX Wallet</b> 浏览器插件（新装后刷新本页），点顶部「连接钱包」，再回来点一次「提交到 BOT 主网」。</li>
+              <li>手机：用 <b>钱包 App 的内置浏览器</b>打开慢记（love.agentcrop.work），点「连接钱包」即可一键直签。</li>
+              <li>链上保存的永远只是这句话的指纹（哈希），没有正文与照片。</li>
+            </ul>
+            <details style="margin:8px 0 10px"><summary class="muted tiny">高级：手动发送调用数据（MetaMask 控制台 / Remix）</summary>
+              <p class="muted tiny" style="margin:6px 0 4px">向合约 <b>${esc(r.manual.contract)}</b>（链 ${r.manual.chainId}）发送 seal 调用（参数只有一个 32 字节承诺哈希，可肉眼审阅）：</p>
+              <div class="chain-hash" style="word-break:break-all">${r.manual.calldata}</div>
+            </details>
+            <div class="btn-row"><button class="btn primary" id="manual-retry">我已备好钱包，重试直签</button>
+            <button class="btn ghost" onclick="closeModal()">稍后再说</button></div>`);
+          const retry = document.getElementById('manual-retry');
+          if (retry) retry.onclick = () => { closeModal(); submitToMainnet(anchorId); };
         } else {
           toast('已加入提交队列，由服务端代提交（约 15 秒内发送）');
           startSealPolling();
