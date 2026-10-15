@@ -60,6 +60,7 @@
 | 线上 keeper 家全链头部锚定（本地高度 1）——首页面板「全链历史已锚定 BOT 主网」对应此交易 | [0xd9073c65…68f9b7e](https://scan.botchain.ai/tx/0xd9073c65627d57249861b303ea557d894b47eebc7475629ee4a97876368f9b7e) |
 | **任意普通钱包直写证明**：随机钱包 0xFB578a33…1269A（非 owner/relayer）直接 seal 成功（index=2，2026-10-10） | [0x19f0035b03a29fd839ec31dcad3a559bfd72bd77877cf55fe6dc3340aaa329f2](https://scan.botchain.ai/tx/0x19f0035b03a29fd839ec31dcad3a559bfd72bd77877cf55fe6dc3340aaa329f2) |
 | **评审演示·真实内容全流程**（2026-10-15，生产 https://love.agentcrop.work）：线上注册「链上评审员」→ 写真实约定「认真记下每一个今天，让它值得被永远记住」→ 镌刻上链 → 生产页面里用 C 端钱包 0x83Ce82E4…E3eAE 直签 seal 成功（主网第 5 条登记 #4，gasUsed 73565，页面弹窗即显示交易与浏览器链接，免登录核验门户可查） | [0x739df4ac0a85a8e47cd2e7b6cf9a06d1d7d39c91d9bed74fb8934e0387d2a9d0](https://scan.botchain.ai/tx/0x739df4ac0a85a8e47cd2e7b6cf9a06d1d7d39c91d9bed74fb8934e0387d2a9d0) |
+| 评审演示·第二条真实约定「上链与否由我决定，我的私钥只在我手里」：无钱包时新引导弹窗（装钱包/内置浏览器指引）→ 注入钱包点「重试直签」→ 同一用户钱包 0x83Ce…E3eAE 再次直签成功（主网第 6 条登记 #5，块 26734739） | [0x0ab3831a2451e7cdca1d4758839bf14ee8aa395eda38ae766b43e1d9e04324dd](https://scan.botchain.ai/tx/0x0ab3831a2451e7cdca1d4758839bf14ee8aa395eda38ae766b43e1d9e04324dd) |
 | 评审演示钱包的 gas 注资（relayer → 用户钱包 0.02 BOT，即上一笔的 from 地址资金来源） | [0x813bcb29d42423ab8eef48eced8cf59078aa87d2d9e29d7b348fa36478e5735f](https://scan.botchain.ai/tx/0x813bcb29d42423ab8eef48eced8cf59078aa87d2d9e29d7b348fa36478e5735f) |
 
 **历史合约（数据仍可独立核验，记录见 `contracts/DEPLOYED-mainnet.json`）**
