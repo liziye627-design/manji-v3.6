@@ -59,6 +59,8 @@
 | 线上 keeper 家实证（2026-10-10，生产 manual 模式 + 本地中继）：回忆承诺密封为主网第 4 条登记 | [0xb338cfc2…48a123](https://scan.botchain.ai/tx/0xb338cfc29fbc5233f4818a13b2e69244c233aaf667a4f9a65a521c815748a123) |
 | 线上 keeper 家全链头部锚定（本地高度 1）——首页面板「全链历史已锚定 BOT 主网」对应此交易 | [0xd9073c65…68f9b7e](https://scan.botchain.ai/tx/0xd9073c65627d57249861b303ea557d894b47eebc7475629ee4a97876368f9b7e) |
 | **任意普通钱包直写证明**：随机钱包 0xFB578a33…1269A（非 owner/relayer）直接 seal 成功（index=2，2026-10-10） | [0x19f0035b03a29fd839ec31dcad3a559bfd72bd77877cf55fe6dc3340aaa329f2](https://scan.botchain.ai/tx/0x19f0035b03a29fd839ec31dcad3a559bfd72bd77877cf55fe6dc3340aaa329f2) |
+| **评审演示·真实内容全流程**（2026-10-15，生产 https://love.agentcrop.work）：线上注册「链上评审员」→ 写真实约定「认真记下每一个今天，让它值得被永远记住」→ 镌刻上链 → 生产页面里用 C 端钱包 0x83Ce82E4…E3eAE 直签 seal 成功（主网第 5 条登记 #4，gasUsed 73565，页面弹窗即显示交易与浏览器链接，免登录核验门户可查） | [0x739df4ac0a85a8e47cd2e7b6cf9a06d1d7d39c91d9bed74fb8934e0387d2a9d0](https://scan.botchain.ai/tx/0x739df4ac0a85a8e47cd2e7b6cf9a06d1d7d39c91d9bed74fb8934e0387d2a9d0) |
+| 评审演示钱包的 gas 注资（relayer → 用户钱包 0.02 BOT，即上一笔的 from 地址资金来源） | [0x813bcb29d42423ab8eef48eced8cf59078aa87d2d9e29d7b348fa36478e5735f](https://scan.botchain.ai/tx/0x813bcb29d42423ab8eef48eced8cf59078aa87d2d9e29d7b348fa36478e5735f) |
 
 **历史合约（数据仍可独立核验，记录见 `contracts/DEPLOYED-mainnet.json`）**
 
