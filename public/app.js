@@ -317,7 +317,7 @@ function topbar({ title = '慢记', en = 'OUR SHARED HOME' } = {}) {
   return `<header class="topbar">
     <button class="icon-btn" id="btn-notif" aria-label="通知">${bellIcon()}<span class="dot" style="display:none"></span></button>
     <div class="brand"><div class="name">${esc(title)}</div><div class="en">${esc(en)}</div></div>
-    ${topbarChainChipHtml()}
+    <span class="tc-slot">${topbarChainChipHtml()}</span>
     <div class="avatars">
       ${members
         .slice(0, 2)
@@ -351,9 +351,78 @@ async function loadChainBadge() {
   }
 }
 
-/** 顶栏常驻的 BOT Chain 入口（数字异步填充，所有 .tc-count 一并更新） */
+/** 顶栏常驻的 BOT Chain 入口（数字异步填充，所有 .tc-count 一并更新）。
+ *  v3.6.6：未连接钱包时给出明确的「连接钱包」按钮（清单要求 MetaMask / OKX 等钱包的 Connect Wallet 入口）；
+ *  已连接显示地址与主网状态，未在链 677 时点徽章即切链。 */
 function topbarChainChipHtml() {
-  return `<a class="topbar-chain" href="#/chain" title="永恒之链 · BOT Chain 主网存证（链 677）">⛓ BOT Chain<b class="tc-count" style="display:none"></b></a>`;
+  const short = botwallet.wallet.address ? `${botwallet.wallet.address.slice(0, 6)}…${botwallet.wallet.address.slice(-4)}` : '';
+  if (!botwallet.isConnected()) {
+    return `<a class="topbar-chain" href="#/chain" title="永恒之链 · BOT Chain 主网存证（链 677）">⛓ BOT Chain<b class="tc-count" style="display:none"></b></a><button class="tc-connect" data-wallet-act="connect" type="button" title="连接 MetaMask / OKX 等钱包，亲自签名把承诺刻上 BOT Chain 主网">连接钱包</button>`;
+  }
+  if (botwallet.onRightChain()) {
+    return `<a class="topbar-chain ok" href="#/chain" title="钱包已连接并在 BOT Chain 主网 · 查看永恒之链">⛓ ${short} · 主网</a>`;
+  }
+  return `<button class="topbar-chain warn" data-wallet-act="switch" type="button" title="点击切换到 BOT Chain 主网（链 677）">⛓ ${short} · 切主网</button>`;
+}
+
+/** 统一的连接入口：连接 → 切链 → 刷新所有徽章（顶栏组合胶囊 + 首页横幅按钮共用） */
+async function connectWalletGlobal() {
+  try {
+    await botwallet.connect();
+    await botwallet.ensureChain().catch(() => {});
+    toast(botwallet.onRightChain() ? '钱包已连接 BOT Chain 主网' : '钱包已连接；请在钱包里切换到 BOT Chain 主网（链 677）');
+  } catch (e) {
+    toast(e.message);
+  } finally {
+    refreshWalletChips();
+  }
+}
+
+/** 钱包状态变化后重绘页面上的钱包徽章组（.tc-slot 由 topbarChainChipHtml 的调用方包裹） */
+function refreshWalletChips() {
+  for (const slot of document.querySelectorAll('.tc-slot')) slot.innerHTML = topbarChainChipHtml();
+  const strip = document.getElementById('chain-strip');
+  if (strip) {
+    const w = strip.querySelector('.cs-wallet');
+    if (w) w.innerHTML = homeStripWalletInner();
+  }
+  bindWalletChips();
+  updateChainChip();
+}
+
+/** 给当前页面上的钱包入口绑事件（bindTopbar 每次路由后也会调） */
+function bindWalletChips() {
+  for (const btn of document.querySelectorAll('[data-wallet-act]')) {
+    btn.onclick = async (ev) => {
+      ev.stopPropagation();
+      if (btn.dataset.walletAct === 'switch') {
+        try { await botwallet.ensureChain(); toast('已切到 BOT Chain 主网'); }
+        catch (e) { toast(e.message); }
+        refreshWalletChips();
+      } else {
+        await connectWalletGlobal();
+      }
+    };
+  }
+}
+
+// 钱包里的账户/链变化实时同步到徽章（connect 后 provider 事件已由 wallet.js 绑定）
+let walletWatchBound = false;
+function bindWalletWatch() {
+  if (walletWatchBound) return;
+  walletWatchBound = true;
+  botwallet.onWalletChange(() => refreshWalletChips());
+}
+
+/** 首页链上足迹横幅右侧的钱包按钮内层（未连接=连接按钮；已连接=地址与链状态） */
+function homeStripWalletInner() {
+  if (!botwallet.isConnected()) {
+    return `<button class="btn gold sm" data-wallet-act="connect" type="button" title="连接 MetaMask / OKX 等钱包">⛓ 连接钱包</button>`;
+  }
+  const short = botwallet.wallet.address ? `${botwallet.wallet.address.slice(0, 6)}…${botwallet.wallet.address.slice(-4)}` : '';
+  return botwallet.onRightChain()
+    ? `<span class="tag ok tiny" title="${botwallet.wallet.address}">⛓ ${short} · 已连主网</span>`
+    : `<span class="tag rose tiny" title="${botwallet.wallet.address}">⛓ ${short} · 未在主网</span>`;
 }
 
 function updateChainChip() {
@@ -442,6 +511,8 @@ function bindTopbar() {
     refreshNotifDot();
   }
   updateChainChip(); // 顶栏 BOT Chain 徽章与首页链上足迹条的数字填充
+  bindWalletChips(); // v3.6.6 顶栏/横幅的「连接钱包」按钮
+  bindWalletWatch(); // 钱包内切账户/切链时实时刷新徽章（只绑一次）
   const add = document.getElementById('tab-add');
   if (add) add.addEventListener('click', openQuickCreate);
 }
@@ -819,9 +890,12 @@ async function viewHome(generation = routeGeneration) {
   const objects = room.objects.map((o) => ({ slotKey: o.slotKey, templateKey: o.templateKey, memory: o.memory }));
   const keepsakes = objects.length + room.storedCount;
 
-  // 链上足迹横幅：点击进永恒之链；数字由 updateChainChip 异步填充（route 渲染后统一触发）
+  // 链上足迹横幅：点击进永恒之链；数字由 updateChainChip 异步填充（route 渲染后统一触发）；
+  // v3.6.6 横幅内直接给「连接钱包」按钮（点按钮只连钱包，不跳页）
   const chainStrip = document.getElementById('chain-strip');
   if (chainStrip) {
+    const stripWallet = chainStrip.querySelector('.cs-wallet');
+    if (stripWallet) stripWallet.innerHTML = homeStripWalletInner(); // 按钮事件由 bindWalletChips 统一绑定（自带 stopPropagation，不会触发横幅跳转）
     chainStrip.onclick = () => { location.hash = '#/chain'; };
     chainStrip.onkeydown = (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); location.hash = '#/chain'; } };
   }
@@ -857,7 +931,7 @@ async function viewHome(generation = routeGeneration) {
             <div class="name">我们的小屋</div>
             <div class="en">${esc(whoText)}${dayN ? ` · DAY ${dayN}` : ''}</div>
           </div>
-          ${topbarChainChipHtml()}
+          <span class="tc-slot">${topbarChainChipHtml()}</span>
           <div class="avatars">
             ${(me.home?.members || []).slice(0, 2)
               .map((m, i) => `<span class="avatar ${i === 1 ? 'rose' : ''}" title="${esc(m.display_name)}">${esc(m.display_name.slice(0, 1))}</span>`)
@@ -873,6 +947,7 @@ async function viewHome(generation = routeGeneration) {
           <div class="cs-title serif">我们的链上足迹 · BOT Chain</div>
           <div class="cs-counts muted tiny">正在读取 BOT 主网…</div>
         </div>
+        <span class="cs-wallet"></span>
         <span class="cs-go" aria-hidden="true">→</span>
       </div>
       ${story ? `

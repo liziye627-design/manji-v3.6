@@ -835,15 +835,29 @@ button:focus-visible, a:focus-visible, .tab:focus-visible, input:focus-visible, 
 .chain-proof { margin-top: 8px; }
 
 /* ================= v3.6.4 · BOT Chain 全局可见性（顶栏徽章 + 首页链上足迹条） ================= */
-.topbar-chain {
+/* v3.6.6：徽章与「连接钱包」按钮组成一个胶囊（.tc-slot），已连接时换成地址/链状态 */
+.tc-slot {
   margin-left: auto; margin-right: 10px;
+  display: inline-flex; align-items: stretch; max-width: 62%;
+}
+.topbar-chain {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 5px 11px; border-radius: 999px;
+  padding: 5px 11px; border-radius: 999px 0 0 999px;
   background: #F6E7CB; color: #8A6420; font-size: 11px; font-weight: 600;
   text-decoration: none; white-space: nowrap; border: 1px solid #E7CFA5;
   transition: background .15s;
 }
 .topbar-chain:active { transform: scale(0.97); }
+.topbar-chain:only-child { border-radius: 999px; }
+.topbar-chain.ok { background: #E9F2DE; border-color: #C5DFAF; color: #3E6B2F; }
+.topbar-chain.warn { background: #FBE8D2; border-color: #E8B48D; color: #8A4A12; cursor: pointer; }
+.tc-connect {
+  display: inline-flex; align-items: center; padding: 5px 11px;
+  border: 1px solid #D89A2B; border-left: none; border-radius: 0 999px 999px 0;
+  background: linear-gradient(180deg, #F7C350, #EBA022); color: #5C3A00;
+  font-size: 11px; font-weight: 700; white-space: nowrap; cursor: pointer;
+}
+.tc-connect:active { transform: scale(0.97); }
 .topbar-chain .tc-count {
   display: inline-flex; min-width: 16px; height: 16px; align-items: center; justify-content: center;
   padding: 0 4px; border-radius: 999px; background: #8A6420; color: #FFF8E8; font-size: 9.5px; font-weight: 700;
@@ -864,6 +878,7 @@ button:focus-visible, a:focus-visible, .tab:focus-visible, input:focus-visible, 
 .chain-strip .cs-title { font-size: 15px; font-weight: 600; color: #6B5420; }
 .chain-strip .cs-counts { margin-top: 2px; }
 .chain-strip .cs-counts b { color: #4A7B3A; font-weight: 700; }
+.chain-strip .cs-wallet { flex: 0 0 auto; display: inline-flex; align-items: center; }
 .chain-strip .cs-go { color: #B99A4E; font-size: 18px; font-weight: 700; }
 
 /* ================= v3.6 · BOT Chain 主网面板与主网状态徽章 ================= */
