@@ -104,6 +104,14 @@ export async function ethCall({ to, data }) {
   return await wallet.provider.request({ method: 'eth_call', params: [{ from: wallet.address, to, data }, 'latest'] });
 }
 
+/** 个人消息签名（personal_sign，EIP-191）：账号绑定钱包用——证明这个地址的私钥在你手里。不涉及任何交易或花费 */
+export async function signPersonal(message) {
+  if (!wallet.provider || !wallet.address) throw new Error('钱包未连接');
+  const hex = '0x' + Array.from(new TextEncoder().encode(String(message)))
+    .map((b) => b.toString(16).padStart(2, '0')).join('');
+  return await wallet.provider.request({ method: 'personal_sign', params: [hex, wallet.address] });
+}
+
 /** 通过钱包 RPC 查交易回执（未上块返回 null） */
 export async function getReceipt(txHash) {
   if (!wallet.provider) throw new Error('钱包未连接');

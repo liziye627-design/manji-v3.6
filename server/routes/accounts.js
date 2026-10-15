@@ -52,6 +52,7 @@ function userPayload(user) {
     id: user.id,
     displayName: user.display_name,
     isAdmin: !!user.is_admin,
+    walletAddress: user.wallet_address || null, // v3.6.7 绑定的钱包地址（凭 personal_sign 签名验证所有权）
     preferences: {
       pauseNotifications: !!prefs.pauseNotifications,
       pauseRecall: !!prefs.pauseRecall,
@@ -72,6 +73,25 @@ function userPayload(user) {
       : null,
     pet: pet ? { id: pet.id, name: pet.name, appearanceKey: pet.appearance_key } : null,
   };
+}
+
+// ---------- 钱包绑定辅助（v3.6.7） ----------
+// 签名挑战存内存：单进程服务足够；10 分钟过期、绑定成功即焚（一次性）。
+const walletChallenges = new Map();
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of walletChallenges) if (now > v.expiresAt) walletChallenges.delete(k);
+}, 60 * 1000).unref();
+let ethersModule = undefined; // undefined=未尝试；null=不可用（未安装 ethers）
+async function getEthers() {
+  if (ethersModule === undefined) {
+    try {
+      ethersModule = await import('ethers');
+    } catch {
+      ethersModule = null;
+    }
+  }
+  return ethersModule;
 }
 
 export const routes = {
@@ -131,6 +151,50 @@ export const routes = {
     db.prepare('UPDATE users SET display_name = ? WHERE id = ?').run(displayName, ctx.user.id);
     audit(ctx.user.id, 'rename', 'user', ctx.user.id, 'ok');
     return { status: 200, data: { data: userPayload(getUser(ctx.user.id)) } };
+  },
+
+  // ---------- 钱包绑定（v3.6.7）：personal_sign 挑战验证所有权，绑定的是「恢复出的签名者地址」 ----------
+  // 挑战存内存（单进程服务，10 分钟过期、一次性使用），消息里写明用途、不含任何转账授权。
+  'POST /api/me/wallet/challenge': async (ctx) => {
+    const nonce = randomToken(16);
+    const expiresAt = Date.now() + 10 * 60 * 1000;
+    walletChallenges.set(nonce, { userId: ctx.user.id, displayName: ctx.user.display_name, message: null, expiresAt });
+    const message = [
+      '慢记 Manji · 绑定钱包',
+      `账号：${ctx.user.display_name}`,
+      '用途：把你的约定与日记刻上 BOT Chain 主网时，用这个钱包签名',
+      `nonce：${nonce}`,
+      '本消息不授权任何转账或花费，有效期 10 分钟',
+    ].join('\n');
+    const entry = walletChallenges.get(nonce);
+    entry.message = message;
+    return { status: 200, data: { data: { nonce, message, expiresAt: new Date(expiresAt).toISOString() } } };
+  },
+
+  'POST /api/me/wallet/bind': async (ctx) => {
+    const { nonce, signature } = ctx.json();
+    const entry = nonce && walletChallenges.get(String(nonce));
+    if (!entry) throw errors.invalid({ nonce: '绑定请求无效或已使用，请重新发起' }, '绑定请求无效或已使用');
+    walletChallenges.delete(String(nonce)); // 一次性
+    if (entry.userId !== ctx.user.id) throw errors.invalid({ nonce: '绑定请求不属于当前账号' }, '绑定请求不属于当前账号');
+    if (Date.now() > entry.expiresAt) throw errors.invalid({ nonce: '签名已过期，请重新发起' }, '签名已过期');
+    const ethers = await getEthers();
+    if (!ethers) throw errors.unavailable('服务器缺少 ethers 依赖，无法验证签名（npm i ethers）');
+    let address;
+    try {
+      address = ethers.verifyMessage(entry.message, String(signature || ''));
+    } catch {
+      throw errors.invalid({ signature: '签名验证失败' }, '签名验证失败');
+    }
+    db.prepare('UPDATE users SET wallet_address = ? WHERE id = ?').run(address, ctx.user.id);
+    audit(ctx.user.id, 'wallet-bind', 'user', ctx.user.id, address);
+    return { status: 200, data: { data: { walletAddress: address, user: userPayload(getUser(ctx.user.id)) } } };
+  },
+
+  'POST /api/me/wallet/unbind': async (ctx) => {
+    db.prepare('UPDATE users SET wallet_address = NULL WHERE id = ?').run(ctx.user.id);
+    audit(ctx.user.id, 'wallet-unbind', 'user', ctx.user.id, 'ok');
+    return { status: 200, data: { data: { walletAddress: null, user: userPayload(getUser(ctx.user.id)) } } };
   },
 
   'PUT /api/me/preferences': async (ctx) => {

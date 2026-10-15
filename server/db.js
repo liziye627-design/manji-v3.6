@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
   current_home_id TEXT,
   preferences TEXT NOT NULL DEFAULT '{}',
   is_admin INTEGER NOT NULL DEFAULT 0,
+  wallet_address TEXT,
   created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS sessions (
@@ -379,6 +380,13 @@ CREATE INDEX IF NOT EXISTS idx_agentos_tips_home ON agentos_tips(home_id, create
 // 旧库迁移：补管理员标记列（新库已含）
 try {
   db.prepare('ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0').run();
+} catch {
+  // 列已存在
+}
+
+// 旧库迁移：v3.6.7 注册/我的页可绑定钱包（凭 personal_sign 签名挑战验证所有权）。
+try {
+  db.prepare('ALTER TABLE users ADD COLUMN wallet_address TEXT').run();
 } catch {
   // 列已存在
 }

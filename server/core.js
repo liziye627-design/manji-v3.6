@@ -151,7 +151,7 @@ export function userForRequest(req) {
   if (!token) return null;
   const row = db
     .prepare(
-      `SELECT u.id, u.display_name, u.current_home_id, u.preferences, u.created_at, u.is_admin
+      `SELECT u.id, u.display_name, u.current_home_id, u.preferences, u.created_at, u.is_admin, u.wallet_address
        FROM sessions s JOIN users u ON u.id = s.user_id
        WHERE s.token_hash = ? AND s.revoked_at IS NULL AND s.expires_at > ?`
     )

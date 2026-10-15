@@ -158,7 +158,7 @@ function stopServer() {
 
 const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai' }).format(new Date());
 const ts = Date.now().toString(36);
-const N = { A: `阿宁${ts}`, B: `小屿${ts}`, C: `路人${ts}`, D: `阿凑${ts}` };
+const N = { A: `阿宁${ts}`, B: `小屿${ts}`, C: `路人${ts}`, D: `阿凑${ts}`, W: `链钱包${ts}` };
 
 async function main() {
   await startServer();
@@ -586,6 +586,38 @@ async function main() {
   const memIds = (await A.req('GET', '/api/memories')).json.data.items.map((m) => m.id);
   await check('ADM05', '管理员也不能读他人私密回忆(404)', (await admin.req('GET', `/api/memories/${privMem.memoryId}`)).status === 404);
   await check('ADM06', '伪造 isAdmin 字段不生效', (await C.req('POST', '/api/memories', { text: '伪造管理员', isAdmin: true })).status === 201 && (await C.req('GET', '/api/admin/overview')).status === 403);
+
+  // ===== W：钱包绑定（v3.6.7，personal_sign 签名挑战） =====
+  {
+    const { Wallet } = await import('ethers');
+    const W = new Session('W'); await W.register(N.W);
+    const ch = await W.req('POST', '/api/me/wallet/challenge');
+    const w = Wallet.createRandom();
+    const sig = await w.signMessage(ch.json.data.message);
+    const bind = await W.req('POST', '/api/me/wallet/bind', { nonce: ch.json.data.nonce, signature: sig });
+    const meAfter = await W.req('GET', '/api/me');
+    await check('W01', '钱包绑定成功且 /me 返回恢复出的地址',
+      bind.status === 200 && meAfter.json.data.walletAddress === w.address,
+      `status=${bind.status}`);
+    const ch2 = await W.req('POST', '/api/me/wallet/challenge');
+    const bad = await W.req('POST', '/api/me/wallet/bind', { nonce: ch2.json.data.nonce, signature: '0xdeadbeef' });
+    await check('W02', '畸形签名被拒绝', bad.status === 422, `status=${bad.status}`);
+    const ch3 = await W.req('POST', '/api/me/wallet/challenge');
+    const other = Wallet.createRandom();
+    const foreignSig = await other.signMessage(ch3.json.data.message);
+    const reuse = await W.req('POST', '/api/me/wallet/bind', { nonce: ch3.json.data.nonce, signature: foreignSig });
+    const meForeign = await W.req('GET', '/api/me');
+    await check('W03', '他人钱包签名=绑定到他人地址（只能绑定自己持有的钱包），挑战一次性',
+      reuse.status === 200 && meForeign.json.data.walletAddress === other.address,
+      `status=${reuse.status}`);
+    const again = await W.req('POST', '/api/me/wallet/bind', { nonce: ch3.json.data.nonce, signature: foreignSig });
+    await check('W04', '同一挑战不能重复使用', again.status === 422, `status=${again.status}`);
+    const un = await W.req('POST', '/api/me/wallet/unbind');
+    const meUn = await W.req('GET', '/api/me');
+    await check('W05', '解绑后地址清空', un.status === 200 && meUn.json.data.walletAddress === null);
+    const anonCh = await new Session('anon').req('POST', '/api/me/wallet/challenge');
+    await check('W06', '未登录不能发起绑定挑战(401)', anonCh.status === 401, `status=${anonCh.status}`);
+  }
 
   // ===== 汇总 =====
   const pass = results.filter((r) => r.pass).length;

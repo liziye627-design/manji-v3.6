@@ -425,6 +425,30 @@ function homeStripWalletInner() {
     : `<span class="tag rose tiny" title="${botwallet.wallet.address}">⛓ ${short} · 未在主网</span>`;
 }
 
+/**
+ * 把当前连接的钱包绑定到账号（v3.6.7）：连接钱包 → 服务端发签名挑战 → personal_sign →
+ * 服务端恢复签名者地址并存档（只能绑定自己持有私钥的钱包）。注册页与「我的」页共用。
+ */
+async function bindWalletFlow() {
+  try {
+    if (!botwallet.isConnected()) {
+      await botwallet.connect();
+      await botwallet.ensureChain().catch(() => {});
+    }
+    toast('请在钱包里签名确认绑定（这条消息不涉及任何转账）…');
+    const ch = await api('POST', '/api/me/wallet/challenge');
+    const signature = await botwallet.signPersonal(ch.message);
+    const r = await api('POST', '/api/me/wallet/bind', { nonce: ch.nonce, signature });
+    state.me = r.user || await loadMe();
+    const a = r.walletAddress || '';
+    toast(`钱包已绑定：${a.slice(0, 10)}…${a.slice(-6)}`);
+    return true;
+  } catch (e) {
+    toast(e.message || '绑定未完成');
+    return false;
+  }
+}
+
 function updateChainChip() {
   loadChainBadge()
     .then((d) => {
@@ -622,6 +646,12 @@ function viewAuth(isRegister) {
           <label for="a-pass">密码</label>
           <input class="input" id="a-pass" type="password" minlength="8" autocomplete="${isRegister ? 'new-password' : 'current-password'}" placeholder="至少 8 位" required>
         </div>
+        ${isRegister ? `
+        <div class="field">
+          <label>钱包（可选）</label>
+          <button class="btn ghost sm" id="a-bind-wallet" type="button" style="width:100%">⛓ 顺便绑定我的钱包</button>
+          <p class="muted tiny" style="margin:6px 0 0">以后把你的约定与日记刻上 BOT Chain 主网时，用它签名（注册后会在钱包里弹一条签名确认）。也可以稍后在「我的」里绑定。</p>
+        </div>` : ''}
         <button class="btn primary block" type="submit">${isRegister ? '开始搭建我的小家' : '回到家'}</button>
       </form>
       <p class="muted tiny" style="margin-top:12px">注册后会有一间单人的小家和一只可以起名的小狗，随时可以邀请另一个人回来。</p>
@@ -631,6 +661,17 @@ function viewAuth(isRegister) {
   </div>`;
   document.getElementById('tab-login').onclick = () => (location.hash = '#/login');
   document.getElementById('tab-reg').onclick = () => (location.hash = '#/register');
+  // v3.6.7 注册时可选绑定钱包：点按钮记下意向（可再点取消），注册成功后走签名绑定
+  let bindIntent = false;
+  const bindBtn = document.getElementById('a-bind-wallet');
+  if (bindBtn) {
+    bindBtn.onclick = () => {
+      bindIntent = !bindIntent;
+      bindBtn.textContent = bindIntent ? '✓ 注册后绑定（点此取消）' : '⛓ 顺便绑定我的钱包';
+      bindBtn.classList.toggle('primary', bindIntent);
+      bindBtn.classList.toggle('ghost', !bindIntent);
+    };
+  }
   document.getElementById('auth-form').onsubmit = async (ev) => {
     ev.preventDefault();
     const displayName = document.getElementById('a-name').value.trim();
@@ -645,6 +686,7 @@ function viewAuth(isRegister) {
       // 注册：走「选择小狗 → 创建小屋」向导，但邀请上下文保留到向导完成/跳过那一刻再消费（v3.5 / B02）——
       // 否则新用户注册完停在首页，不知道自己正被邀请，必须重新打开原链接才能接受。
       if (isRegister) {
+        if (bindIntent) await bindWalletFlow(); // 钱包弹签名框；失败不阻塞注册
         location.hash = '#/onboarding';
         return;
       }
@@ -3244,6 +3286,23 @@ async function viewMe() {
     </div>
 
     <div class="card">
+      <h3>我的钱包</h3>
+      ${me.walletAddress ? `
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="tag ok tiny" title="${esc(me.walletAddress)}">⛓ ${me.walletAddress.slice(0, 10)}…${me.walletAddress.slice(-6)}</span>
+        <a class="mono-link tiny" target="_blank" rel="noopener" href="${botwallet.BOT_CHAIN_PARAMS.blockExplorerUrls[0]}/address/${esc(me.walletAddress)}">浏览器 ↗</a>
+        <span style="flex:1"></span>
+        <button class="btn ghost sm" id="btn-wallet-rebind">换绑</button>
+        <button class="btn ghost sm" id="btn-wallet-unbind">解绑</button>
+      </div>
+      <p class="muted tiny" style="margin:8px 0 0">绑定凭你的钱包签名验证。上链交易始终由你在钱包里逐笔确认，慢记不接触任何私钥。</p>` : `
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn primary sm" id="btn-wallet-bind">⛓ 绑定我的钱包</button>
+        <span class="muted tiny">把你的约定与日记刻上 BOT Chain 主网时，用它签名（MetaMask / OKX 等）</span>
+      </div>`}
+    </div>
+
+    <div class="card">
       <h3>偏好</h3>
       ${[
         ['pauseNotifications', '通知静一静', '纪念日提醒和承诺确认暂时不打扰你'],
@@ -3324,6 +3383,20 @@ async function viewMe() {
     };
   };
   document.getElementById('btn-pet').onclick = () => openPetModal();
+  // v3.6.7 钱包绑定管理：绑定/换绑走同一条签名流；解绑直接清空
+  const bindBtn2 = document.getElementById('btn-wallet-bind');
+  if (bindBtn2) bindBtn2.onclick = async () => { if (await bindWalletFlow()) route(); };
+  const rebindBtn = document.getElementById('btn-wallet-rebind');
+  if (rebindBtn) rebindBtn.onclick = async () => { if (await bindWalletFlow()) route(); };
+  const unbindBtn = document.getElementById('btn-wallet-unbind');
+  if (unbindBtn) unbindBtn.onclick = async () => {
+    try {
+      await api('POST', '/api/me/wallet/unbind');
+      state.me = await loadMe();
+      toast('已解绑钱包');
+      route();
+    } catch (e) { toast(e.message); }
+  };
   const homeNameBtn = document.getElementById('btn-home-name');
   if (homeNameBtn) {
     homeNameBtn.onclick = async () => {

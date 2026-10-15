@@ -1,8 +1,8 @@
 {
-  "ranAt": "2026-10-15T03:33:51.304Z",
-  "base": "http://127.0.0.1:4453",
-  "passed": 101,
-  "total": 101,
+  "ranAt": "2026-10-15T03:56:24.004Z",
+  "base": "http://127.0.0.1:4228",
+  "passed": 107,
+  "total": 107,
   "items": [
     {
       "id": "M01a",
@@ -386,7 +386,7 @@
       "id": "M32d",
       "name": "获得授权后作品任务可建立",
       "pass": true,
-      "detail": "status=201 {\"workId\":\"wrk_HpC3K4m3JESe\",\"status\":\"queued\"}"
+      "detail": "status=201 {\"workId\":\"wrk_VlpJ3i2xTRZ2\",\"status\":\"queued\"}"
     },
     {
       "id": "M33",
@@ -609,6 +609,42 @@
       "name": "伪造 isAdmin 字段不生效",
       "pass": true,
       "detail": ""
+    },
+    {
+      "id": "W01",
+      "name": "钱包绑定成功且 /me 返回恢复出的地址",
+      "pass": true,
+      "detail": "status=200"
+    },
+    {
+      "id": "W02",
+      "name": "畸形签名被拒绝",
+      "pass": true,
+      "detail": "status=422"
+    },
+    {
+      "id": "W03",
+      "name": "他人钱包签名=绑定到他人地址（只能绑定自己持有的钱包），挑战一次性",
+      "pass": true,
+      "detail": "status=200"
+    },
+    {
+      "id": "W04",
+      "name": "同一挑战不能重复使用",
+      "pass": true,
+      "detail": "status=422"
+    },
+    {
+      "id": "W05",
+      "name": "解绑后地址清空",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "W06",
+      "name": "未登录不能发起绑定挑战(401)",
+      "pass": true,
+      "detail": "status=401"
     }
   ]
 }
